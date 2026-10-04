@@ -135,7 +135,7 @@ def run_damage(scene, prop, out_dir: Path, log=print, views=None, debug_dir=None
         Path(debug_dir).mkdir(parents=True, exist_ok=True)
     if views is None:
         if scene.tier == "lidar":
-            views = lidar_views(scene, out_dir / "frames")
+            views = lidar_views(scene, out_dir / "frames_640")  # cache keyed by resolution: K depends on it
         else:
             views = scene.meta.get("damage_views", [])
     S = _surfaces(prop)
