@@ -32,6 +32,11 @@ def run(cmd_args, out, force=False, log=print):
     res = Path(out) / "result.json"
     if res.exists() and not force:
         return json.load(open(res)), None
+    if force:   # regenerate from raw inputs: no cached frames/orthos from an older code version survive
+        import shutil
+        shutil.rmtree(Path(out) / "damage", ignore_errors=True)
+        for f in ("result.json", "plan.png", "plan.svg", "log.txt"):
+            (Path(out) / f).unlink(missing_ok=True)
     t = time.time()
     cmd = [sys.executable, "-m", "roomscan"] + cmd_args + ["--out", str(out)]
     log("  $ " + " ".join(cmd))

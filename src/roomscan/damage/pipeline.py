@@ -6,6 +6,7 @@ specular highlights and screen glare move with the viewpoint; real damage does n
 """
 from __future__ import annotations
 
+import json
 import subprocess
 from pathlib import Path
 
@@ -17,6 +18,8 @@ from scipy import ndimage as ndi
 from ..measure import combine
 from .detect import detect_ortho
 from .rules import concealed_flags, scope_items
+
+CACHE_VERSION = 2   # bump whenever frame selection/extraction changes
 
 RES = 0.01          # surface orthomosaic resolution (m)
 MIN_VIEWS = 3
@@ -104,6 +107,17 @@ def lidar_views(scene, work: Path, max_views=96, width=640):
     sel = np.array(sorted({int(i) for i in sel if 0 <= int(cap.frame_ids[i]) - off < n_frames},
                           key=lambda i: cap.frame_ids[i]))
     work.mkdir(parents=True, exist_ok=True)
+    # the cache is only valid for the same video, frame offset, width and extraction code; otherwise rebuild it
+    # (a stale cache once paired images with the wrong poses)
+    vid = Path(scene.meta["capture"]) / "rgb.mp4"
+    st = vid.stat()
+    key = dict(video=str(vid.resolve()), size=st.st_size, mtime=int(st.st_mtime), offset=int(off), width=width,
+               version=CACHE_VERSION)
+    man = work / "_cache.json"
+    if not man.exists() or json.loads(man.read_text()) != key:
+        for f in work.glob("*.jpg"):
+            f.unlink()
+        man.write_text(json.dumps(key))
     need = [i for i in sel if not (work / f"{int(cap.frame_ids[i]):06d}.jpg").exists()]
     if need:
         expr = "+".join(f"eq(n\\,{int(cap.frame_ids[i]) - off})" for i in need)
