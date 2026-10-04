@@ -113,3 +113,9 @@ A gap with see-through was a door only if nothing was on the wall plane below 0.
 never sees that band, so every door became a "window". Now: another room of the plan beyond the gap -> door;
 else floor continuing beyond the gap -> door; wall below the gap or no floor beyond -> window. floor_only went
 from 1 to 4 room-to-room doors (all 5 rooms connected).
+
+## D18. A wall face may not sit inside another room
+The contract test caught rooms overlapping by up to 1.75 m² after the "outermost face" rule (iteration 2) pushed
+edges past thin walls into the neighbour. Candidates whose room-side neighbourhood lies in another room's labelled
+cells are now rejected. Residual overlap: 0.09 / 0.34 / 0.84 m² (single / floor / ceiling capture), reported per
+run as `room_overlap_m2`.

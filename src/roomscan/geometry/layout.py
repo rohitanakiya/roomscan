@@ -231,7 +231,7 @@ class WallFit:
     ambiguity: float = 0.0   # m: spread of other strong room-facing layers within 0.15 m of the chosen face
 
 
-def snap_edge(orient, c0, a, b, inward_sign, q, nq, P: LayoutParams) -> WallFit:
+def snap_edge(orient, c0, a, b, inward_sign, q, nq, P: LayoutParams, forbid=None) -> WallFit:
     """Fit the room-side wall face behind a raster edge.
 
     orient H: edge at v=c0 spanning u in [a,b]; normal axis = v.
@@ -273,6 +273,10 @@ def snap_edge(orient, c0, a, b, inward_sign, q, nq, P: LayoutParams) -> WallFit:
         m = np.abs(x - c) < 0.02
         floor_reach = np.percentile(hgt[m], 5) if m.sum() > 10 else 9.0
         centres.append((c, floor_reach))
+    if forbid is not None:
+        # a wall face never lies inside another room: drop candidates that would push this room into a neighbour
+        ok = [(c, fr) for c, fr in centres if not forbid(c)]
+        centres = ok or [min(centres, key=lambda t: abs(t[0] - c0))]
     full = [c for c, fr in centres if fr < P.wall_floor_reach]
     pool = full or [c for c, _ in centres]
     first = max(pool, key=lambda c: (c - c0) * out)     # outermost qualifying face

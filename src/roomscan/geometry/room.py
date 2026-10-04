@@ -44,6 +44,23 @@ def _signed_area(p):
     return 0.5 * np.sum(x * np.roll(y, -1) - np.roll(x, -1) * y)
 
 
+def _forbid_fn(orient, ta, tb, out, labels, self_label, grid, frac=0.3):
+    """True if a face at coordinate c would put this room's edge inside another room's labelled cells."""
+    lo, hi = min(ta, tb), max(ta, tb)
+    ts = np.linspace(lo + 0.1 * (hi - lo), hi - 0.1 * (hi - lo), 9)
+
+    def f(c):
+        pts = np.zeros((len(ts), 2))
+        ax_n, ax_t = (1, 0) if orient == "H" else (0, 1)
+        pts[:, ax_t] = ts
+        pts[:, ax_n] = c - out * 0.03          # just inside the candidate face
+        ij = grid.to_px(pts)
+        okb = (ij[:, 0] >= 0) & (ij[:, 0] < grid.shape[1]) & (ij[:, 1] >= 0) & (ij[:, 1] < grid.shape[0])
+        lab = labels[ij[okb, 1], ij[okb, 0]]
+        return (((lab != 0) & (lab != self_label)).sum() / max(len(ts), 1)) > frac
+    return f
+
+
 def _simplify(S, min_edge, merge_tol=0.05):
     """Post-snap cleanup: merge consecutive collinear faces, drop jogs shorter than min_edge."""
     def merge_same(S):
@@ -99,7 +116,8 @@ def build_room(label, mask, rasters, labels, q, nq, P: LayoutParams, E: ErrorMod
         probe[ax_n] += 0.05
         inward = 1 if path.contains_point(probe) else -1
         ta, tb = (a[0], b[0]) if o == "H" else (a[1], b[1])
-        fit = snap_edge(o, c0, ta, tb, inward, q, nq, P)
+        fit = snap_edge(o, c0, ta, tb, inward, q, nq, P,
+                        forbid=_forbid_fn(o, ta, tb, -inward, labels, label, rasters.grid))
         S.append(dict(o=o, coord=fit.coord, fit=fit))
     S = _simplify(S, P.min_edge)
     segs = [[d["o"], d["coord"], 0.0] for d in S]
