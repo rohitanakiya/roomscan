@@ -95,4 +95,24 @@ def analyze(scene, P: LayoutParams | None = None, log=print) -> Property:
         for j in range(i + 1, len(polys)):
             overlaps += polys[i].intersection(polys[j]).area
     return Property(scene.tier, F, rooms, adjacency, R, labels, footprint,
-                    meta=dict(room_overlap_m2=round(overlaps, 4), q_points=len(q)))
+                    meta=dict(room_overlap_m2=round(overlaps, 4), q_points=len(q),
+                              wall_sharpness=wall_sharpness(q, nq, rooms)))
+
+
+def wall_sharpness(q, nq, rooms, band=0.15, tol=0.02):
+    """Drift diagnostic: of the room-facing vertical points within ±15 cm of each fitted wall face, the
+    fraction within ±2 cm. Accumulated pose drift shows up as doubled walls, which lowers this number."""
+    num = den = 0
+    for r in rooms:
+        for w in r.walls:
+            if not w["fit"].observed:
+                continue
+            ax_n, ax_t = (1, 0) if w["orient"] == "H" else (0, 1)
+            a, b = w["start"][ax_t], w["end"][ax_t]
+            lo, hi = min(a, b) + 0.1, max(a, b) - 0.1
+            m = ((np.abs(nq[:, ax_n]) > 0.9) & (q[:, ax_t] > lo) & (q[:, ax_t] < hi)
+                 & (np.abs(q[:, ax_n] - w["coord"]) < band) & (q[:, 2] > 0.1))
+            d = np.abs(q[m, ax_n] - w["coord"])
+            num += int((d < tol).sum())
+            den += len(d)
+    return round(num / den, 4) if den else None

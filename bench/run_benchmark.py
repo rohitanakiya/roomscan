@@ -111,7 +111,9 @@ def main(force=False, outdir=ROOT / "bench" / "results", tiers=("lidar", "video"
     for k, v in R.items():
         if v:
             B["runs"][k] = dict(rooms=len(v["rooms"]), footprint=v["property"]["footprint_area"],
-                                drift=v["property"].get("drift"), timing=v["pipeline"].get("timing"))
+                                drift=v["property"].get("drift"), timing=v["pipeline"].get("timing"),
+                                wall_sharpness=v["property"].get("wall_sharpness"),
+                                room_overlap_m2=v["property"].get("room_overlap_m2"))
             if k in R and v:
                 B["timing"][k] = v["pipeline"].get("timing")
     # 3. LiDAR repeatability: every pair of captures of the same flat
@@ -151,10 +153,16 @@ def write_md(B, path):
          "of the same capture, as stated per table.\n"]
     for n in B["notes"]:
         L.append(f"> NOTE: {n}\n")
-    L.append("## Runs\n\n| run | rooms | footprint m² [95% CI] | total s |\n|---|---|---|---|")
+    L.append("## Runs (drift ablation: `*/no_drift` = ARKit poses as-is)\n\n| run | rooms | footprint m² [95% CI] | "
+             "wall sharpness (±2 cm / ±15 cm) | loop residual before→after cm | loop edges kept | total s |\n"
+             "|---|---|---|---|---|---|---|")
     for k, v in B["runs"].items():
         fp = v["footprint"]
+        d = v.get("drift") or {}
+        lr = (f"{100 * d['mean_loop_residual_before_m']:.1f} → {100 * (d.get('mean_loop_residual_after_m') or 0):.1f}"
+              if d.get("mean_loop_residual_before_m") is not None else "—")
         L.append(f"| {k} | {v['rooms']} | {fp['value']:.2f} [{fp['ci95'][0]:.2f}, {fp['ci95'][1]:.2f}] | "
+                 f"{v.get('wall_sharpness')} | {lr} | {d.get('loop_edges_kept', '—')} | "
                  f"{(v.get('timing') or {}).get('total_s', '')} |")
     L.append("\n## Comparisons\n\n| comparison | reg. score | room pairs | walls | median |Δ| cm | median |Δ| % | "
              "repeatable (≤1 cm/0.5%) % | ≤3% % | ≤8% % | ref in 95% CI % | openings matched/missed/phantom | opening ≤2 cm % |\n"

@@ -105,6 +105,7 @@ def property_to_json(prop, scene, extra=None):
             room_overlap_m2=prop.meta.get("room_overlap_m2", 0.0),
             adjacency=prop.adjacency,
             drift=scene.meta.get("drift"),
+            wall_sharpness=prop.meta.get("wall_sharpness"),
         ),
         rooms=rooms_js,
         warnings=prop.meta.get("warnings", []),

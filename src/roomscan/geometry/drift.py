@@ -56,7 +56,7 @@ def _fragment_cloud(cloud_fn, idx, poses, anchor_inv, voxel):
     return pcd
 
 
-def correct_drift(poses, kf, cloud_fn, frag_len=12, voxel=0.04, max_pair_dist=3.0, icp_rmse=0.02,
+def correct_drift(poses, kf, cloud_fn, frag_len=8, voxel=0.04, max_pair_dist=4.0, icp_rmse=0.02,
                   fit_min=0.35, max_jump=0.30, log=print):
     """poses: (N,4,4) camera->world; kf: keyframe indices; cloud_fn(i) -> (M,3) camera-frame points."""
     import open3d as o3d
@@ -116,20 +116,26 @@ def correct_drift(poses, kf, cloud_fn, frag_len=12, voxel=0.04, max_pair_dist=3.
 
     new = poses.copy()
     corr_mag = []
-    # piecewise correction, linearly blended in translation between fragment anchors
-    corrs = []
+    # per-fragment world corrections (yaw + translation), blended linearly between fragment anchors so the
+    # corrected trajectory has no jumps at fragment boundaries (a jump splits one wall into two layers)
+    yaws, trans = [], []
     for k in range(n):
         C = _yaw_only(pg.nodes[k].pose @ np.linalg.inv(anchors[k]))
-        corrs.append(C)
+        yaws.append(np.arctan2(C[0, 2], C[2, 2]))
+        trans.append(C[:3, 3])
         corr_mag.append(np.linalg.norm(pg.nodes[k].pose[:3, 3] - anchors[k][:3, 3]))
-    frag_of = np.zeros(len(poses), int)
-    for k, f in enumerate(frags):
-        lo = f[0]
-        hi = frags[k + 1][0] if k + 1 < n else len(poses)
-        frag_of[lo:hi] = k
-    frag_of[: frags[0][0]] = 0
+    yaws = np.unwrap(np.array(yaws))
+    trans = np.array(trans)
+    anchor_idx = np.array([f[0] for f in frags], float)
+    t_all = np.arange(len(poses), dtype=float)
+    yi = np.interp(t_all, anchor_idx, yaws)
+    ti = np.stack([np.interp(t_all, anchor_idx, trans[:, d]) for d in range(3)], 1)
     for t in range(len(poses)):
-        new[t] = corrs[frag_of[t]] @ poses[t]
+        c, s_ = np.cos(yi[t]), np.sin(yi[t])
+        C = np.eye(4)
+        C[:3, :3] = np.array([[c, 0, s_], [0, 1, 0], [-s_, 0, c]])
+        C[:3, 3] = ti[t]
+        new[t] = C @ poses[t]
 
     # residual after optimisation on the loop edges that survived line-process pruning
     post = []

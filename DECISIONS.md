@@ -100,3 +100,16 @@ wall pairs from repeat captures (gross mismatches > 30 cm — a different wall, 
 validated leave-one-pair-out: fitted face_floor = 6 cm, held-out coverage 100% / 80% / 89%. LiDAR wall intervals
 are therefore ±~17 cm (95%) — the repeatability we can demonstrate on this data, not the ±1–2 cm the sensor could
 deliver with better pose consistency.
+
+## D16. Drift correction re-tuned on a wall-sharpness metric
+Loop residual alone was misleading: v0.1 cut it from ~10 to ~3 cm yet made walls *less* sharp than raw ARKit
+(0.517 vs 0.530; 0.368 vs 0.381), because piecewise-constant fragment corrections step at boundaries. Adopted:
+8-keyframe fragments, loop pairs up to 4 m apart, corrections blended between anchors — sharper than raw poses on
+both captures (0.564 vs 0.530, 0.428 vs 0.381). Table: bench/drift_tuning.md. Wall sharpness is now reported per
+run so the drift ablation shows it directly.
+
+## D17. Door vs window by what lies beyond, not by what is below
+A gap with see-through was a door only if nothing was on the wall plane below 0.9 m; the ceiling-aimed capture
+never sees that band, so every door became a "window". Now: another room of the plan beyond the gap -> door;
+else floor continuing beyond the gap -> door; wall below the gap or no floor beyond -> window. floor_only went
+from 1 to 4 room-to-room doors (all 5 rooms connected).

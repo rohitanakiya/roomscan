@@ -71,7 +71,7 @@ def detect_openings(edge, q, rasters, labels, self_label, min_width=0.55, max_do
     tc = lo + (np.arange(nb) + 0.5) * BIN
     through = np.zeros(nb)
     nbr = np.zeros(nb, int)
-    for off in (0.30, 0.45, 0.60):
+    for off in (0.30, 0.45, 0.60, 0.80, 1.00):
         n_coord = c - inward * off
         uv = np.zeros((nb, 2))
         uv[:, ax_t] = tc
@@ -86,44 +86,57 @@ def detect_openings(edge, q, rasters, labels, self_label, min_width=0.55, max_do
         nbr = np.where((nbr == 0) & (lab != self_label), lab, nbr)
 
     out = []
-    # small morphological tolerance: a single occupied bin (handle, noise) doesn't close a gap
-    empty = ~(low | mid)
-    for s, e in _runs(empty):
-        w_bins = e - s
-        if w_bins * BIN < min_width * 0.8:
+    # gap candidates: nothing on the wall plane at mid height (0.9-1.7 m) and see-through beyond it.
+    # Door vs window is decided afterwards from what is below the gap.
+    beyond = (np.abs(q[:, 2]) < 0.06) & ((c - q[:, ax_n]) * inward > 0.15) & ((c - q[:, ax_n]) * inward < 0.9)
+    floor_t = q[beyond, ax_t]
+    for s, e in _runs(~mid):
+        if (e - s) * BIN < min_width * 0.8:
             continue
         thr = through[s:e].mean()
         if thr < min_through:
             continue
-        # sub-bin jambs from actual points; a run touching the edge end is bounded by the corner
-        left = t[(t < tc[s]) & ((h > 0.08) & (h < 1.7))]
-        right = t[(t > tc[e - 1]) & ((h > 0.08) & (h < 1.7))]
+        # jambs from mid-height points (doors) — sub-bin
+        band = (h >= 0.9) & (h < 1.7)
+        left = t[(t < tc[s]) & band]
+        right = t[(t > tc[e - 1]) & band]
         t0 = float(left.max()) if (s > 0 and len(left)) else lo
         t1 = float(right.min()) if (e < nb and len(right)) else hi
         width = t1 - t0
         if width < min_width:
             continue
-        # jamb precision: spread of the outermost points at each jamb
+
         def jamb_sigma(arr, side):
             if len(arr) < 5:
                 return 0.02
-            a = np.sort(arr)[-10:] if side == "l" else np.sort(arr)[:10]
-            return float(max(np.std(a), 0.004))
+            a_ = np.sort(arr)[-10:] if side == "l" else np.sort(arr)[:10]
+            return float(max(np.std(a_), 0.004))
         ws = float(np.hypot(jamb_sigma(left, "l") if s > 0 else 0.01, jamb_sigma(right, "r") if e < nb else 0.01))
-        # header -> door height
         in_gap = (t > t0 + 0.03) & (t < t1 - 0.03)
+        # floor continuity through the gap (a door has floor on the far side, a window does not)
+        nb5 = max(int(width / 0.05), 1)
+        fb = np.zeros(nb5, bool)
+        ft = floor_t[(floor_t > t0) & (floor_t < t1)]
+        fb[np.clip(((ft - t0) / 0.05).astype(int), 0, nb5 - 1)] = True
+        floor_cont = fb.mean()
+        low_occ = low[s:e].mean()
+        lowpts = h[in_gap & (h < 1.2) & (h > 0.08)]
         hdr = h[in_gap & (h > 1.7)]
         height, hs = (float(np.percentile(hdr, 2)), 0.015) if len(hdr) > 20 else (None, None)
         lab_far = np.bincount(nbr[s:e][nbr[s:e] > 0]).argmax() if (nbr[s:e] > 0).any() else 0
-        kind = "door" if width <= max_door else "passage"
-        out.append(Opening(kind, t0, t1, width, ws, height, hs, None, float(thr), int(lab_far)))
-
-    # windows: wall present low, absent mid, see-through
-    for s, e in _runs(low & ~mid & (through > 0)):
-        if (e - s) * BIN < 0.4:
-            continue
-        lowpts = h[((t > tc[s]) & (t < tc[e - 1])) & (h < 1.2)]
-        sill = float(np.percentile(lowpts, 98)) if len(lowpts) else None
-        out.append(Opening("window", float(tc[s]), float(tc[e - 1]), float((e - s) * BIN), 0.02,
-                           None, None, sill, float(through[s:e].mean()), 0))
+        if lab_far != 0 and low_occ <= 0.5:
+            # interior-to-interior: another room of this plan lies beyond -> door / passage
+            kind = "door" if width <= max_door else "passage"
+            sill = None
+        elif floor_cont >= 0.4 and low_occ <= 0.4:
+            kind = "door" if width <= max_door else "passage"
+            sill = None
+        elif low_occ >= 0.5 or floor_cont < 0.2:
+            kind = "window"
+            sill = float(np.percentile(lowpts, 98)) if len(lowpts) > 10 else None
+            lab_far = 0
+        else:
+            kind = "door" if width <= max_door else "passage"
+            sill = None
+        out.append(Opening(kind, t0, t1, width, ws, height, hs, sill, float(thr), int(lab_far)))
     return out
