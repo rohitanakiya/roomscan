@@ -18,3 +18,18 @@ direction). Stray's own visualiser does the same. World frame stays ARKit's: +y 
 All three tiers are derived from the three provided Stray captures:
 LiDAR = everything; video = rgb.mp4 only (depth, poses, intrinsics dropped);
 photo = 2–8 stills per room extracted from the video, no metadata. Disclosed in report.
+
+## D4. Room segmentation = visibility free-space + wall evidence + watershed
+Floor-point occupancy was too sparse (beds/furniture hide floor; camera aimed low).
+Wall-enclosure flood fill leaked through unobserved wall stretches. What works: per keyframe,
+a 2D visibility fan (camera -> farthest return per 1° azimuth) marks free space; walls are
+cells whose vertical points span > 0.9 m of height (furniture rarely does). Interior = free −
+walls; rooms = watershed on the distance transform seeded by cores that survive erosion by
+0.42 m (so passages narrower than ~0.84 m — doors — split rooms; corridors don't vanish).
+Regions with < 35% of their boundary on walls are ray leaks through doors/windows → dropped.
+
+## D5. Wall face = first strong face outward from the raster edge
+The raster boundary sits at or inside the wall. Taking the strongest histogram peak made edges
+jump across thin walls to the neighbour's face; taking the first face met going outward fixes
+that. Faces are fitted from raw points (robust median, MAD clipping), so dimensions do not
+inherit the 2 cm raster quantisation.
