@@ -33,3 +33,22 @@ The raster boundary sits at or inside the wall. Taking the strongest histogram p
 jump across thin walls to the neighbour's face; taking the first face met going outward fixes
 that. Faces are fitted from raw points (robust median, MAD clipping), so dimensions do not
 inherit the 2 cm raster quantisation.
+
+## D6. The three sample captures are one property
+Correlating Manhattan-aligned wall rasters: floor_only vs with_ceiling peak NCC 0.53 at a 90°
+rotation (next best 0.31); with_ceiling vs single_room 0.43. So the benchmark can measure
+LiDAR repeatability across captures of the same rooms, and the LiDAR consensus is the
+reference the video and photo tiers are scored against (no laser ground truth exists for the
+sample data — stated plainly in the report).
+
+## D7. Video tier: classical SfM rejected, depth-driven odometry instead
+COLMAP (SIFT, sequential matching) on the single-room walkthrough at 3 fps registered 44/112
+frames split across 3 models: white walls. Metric mono-depth + KLT/PnP odometry with ICP
+fallback avoids both the texture problem and SfM's scale ambiguity. Focal length is not
+known for a plain video: a Manhattan vanishing-point estimate gave 536 px vs the true 533 px
+(0.6%) on the sample clip.
+
+## D8. Visibility uses ceiling returns too
+The ceiling-aimed capture sees little below 2.4 m; excluding ceiling points from the visibility
+fans starved free space and dropped the corridor. A ray to a ceiling point still crossed free
+plan space, so all returns up to 4 m now count.

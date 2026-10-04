@@ -50,7 +50,7 @@ def visibility_raster(views, frame, grid: Grid):
     free = np.zeros(grid.shape, np.uint8)
     for cam, pw in views:
         pq = frame.to_plan(pw)
-        pq = pq[(pq[:, 2] > -0.1) & (pq[:, 2] < 2.4)]
+        pq = pq[(pq[:, 2] > -0.1) & (pq[:, 2] < 4.0)]  # incl. ceiling returns: the ray to them crossed free space
         if len(pq) < 50:
             continue
         c = frame.to_plan(np.asarray(cam)[None])[0, :2]

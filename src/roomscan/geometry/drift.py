@@ -29,15 +29,23 @@ def _yaw_only(T):
     return out
 
 
-def _fragment_cloud(cap, idx, poses, anchor_inv, voxel):
+def lidar_cloud_fn(cap, max_depth=4.0, stride=3):
+    def f(i):
+        d = cap.load_depth(int(cap.frame_ids[i]), min_conf=2)
+        if d is None:
+            return None
+        return backproject(d, cap.K_depth, stride=stride, max_depth=max_depth)[0]
+    return f
+
+
+def _fragment_cloud(cloud_fn, idx, poses, anchor_inv, voxel):
     import open3d as o3d
 
     pts = []
     for i in idx:
-        d = cap.load_depth(int(cap.frame_ids[i]), min_conf=2)
-        if d is None:
+        p = cloud_fn(i)
+        if p is None or len(p) == 0:
             continue
-        p, _ = backproject(d, cap.K_depth, stride=3, max_depth=4.0)
         T = anchor_inv @ poses[i]
         pts.append(p @ T[:3, :3].T + T[:3, 3])
     if not pts:
@@ -48,13 +56,14 @@ def _fragment_cloud(cap, idx, poses, anchor_inv, voxel):
     return pcd
 
 
-def correct_drift(cap, kf, frag_len=12, voxel=0.04, max_pair_dist=3.0, log=print):
+def correct_drift(poses, kf, cloud_fn, frag_len=12, voxel=0.04, max_pair_dist=3.0, icp_rmse=0.02,
+                  fit_min=0.35, max_jump=0.30, log=print):
+    """poses: (N,4,4) camera->world; kf: keyframe indices; cloud_fn(i) -> (M,3) camera-frame points."""
     import open3d as o3d
 
-    poses = cap.poses
     frags = [kf[i:i + frag_len] for i in range(0, len(kf), frag_len)]
     anchors = [poses[f[0]] for f in frags]
-    clouds = [_fragment_cloud(cap, f, poses, np.linalg.inv(a), voxel) for f, a in zip(frags, anchors)]
+    clouds = [_fragment_cloud(cloud_fn, f, poses, np.linalg.inv(a), voxel) for f, a in zip(frags, anchors)]
     centres = np.array([poses[f, :3, 3].mean(0) for f in frags])
     n = len(frags)
 
@@ -80,13 +89,13 @@ def correct_drift(cap, kf, frag_len=12, voxel=0.04, max_pair_dist=3.0, log=print
             r2 = o3d.pipelines.registration.registration_icp(
                 clouds[i], clouds[j], 0.03, r1.transformation,
                 o3d.pipelines.registration.TransformationEstimationPointToPlane(), crit)
-            if r2.fitness < 0.35 or r2.inlier_rmse > 0.02:
+            if r2.fitness < fit_min or r2.inlier_rmse > icp_rmse:
                 continue
             # discrepancy expressed in the (gravity-aligned) world frame, projected to 4-DoF
             D = _yaw_only(anchors[j] @ r2.transformation @ np.linalg.inv(anchors[i]))
             Tij = np.linalg.inv(anchors[j]) @ D @ anchors[i]
             dt = float(np.linalg.norm(D[:3, 3] + (D[:3, :3] - np.eye(3)) @ centres[i]))
-            if dt > 0.30:
+            if dt > max_jump:
                 continue
             info = o3d.pipelines.registration.get_information_matrix_from_point_clouds(
                 clouds[i], clouds[j], 0.03, Tij)
@@ -122,17 +131,21 @@ def correct_drift(cap, kf, frag_len=12, voxel=0.04, max_pair_dist=3.0, log=print
     for t in range(len(poses)):
         new[t] = corrs[frag_of[t]] @ poses[t]
 
-    # residual after optimisation on the accepted loop edges
+    # residual after optimisation on the loop edges that survived line-process pruning
     post = []
-    for (i, j), e in zip(loops, [e for e in pg.edges if e.uncertain]):
-        pred = np.linalg.inv(pg.nodes[j].pose) @ pg.nodes[i].pose
-        post.append(float(np.linalg.norm((np.linalg.inv(pred) @ e.transformation)[:3, 3])))
+    kept = [e for e in pg.edges if e.uncertain]
+    for e in kept:
+        # world-frame discrepancy between placing fragment i via its node and via node j + loop edge
+        Dw = pg.nodes[e.target_node_id].pose @ e.transformation @ np.linalg.inv(pg.nodes[e.source_node_id].pose)
+        c = centres[e.source_node_id]
+        post.append(float(np.linalg.norm(Dw[:3, 3] + (Dw[:3, :3] - np.eye(3)) @ c)))
     info = dict(method="fragment pose graph + 4-DoF ICP loop closure (Open3D LM, line-process pruning)",
-                enabled=True, fragments=n, loop_edges=len(loops),
+                enabled=True, fragments=n, loop_edges=len(loops), loop_edges_kept=len(kept),
                 mean_loop_residual_before_m=round(float(np.mean(residuals)), 4),
-                mean_loop_residual_after_m=round(float(np.mean(post)), 4),
+                mean_loop_residual_after_m=round(float(np.mean(post)), 4) if post else None,
                 max_correction_m=round(float(np.max(corr_mag)), 4))
     log(f"  drift: {n} fragments, {len(loops)} loop edges, residual "
-        f"{info['mean_loop_residual_before_m']*100:.1f} -> {info['mean_loop_residual_after_m']*100:.1f} cm, "
+        f"{info['mean_loop_residual_before_m']*100:.1f} -> {(info['mean_loop_residual_after_m'] or 0)*100:.1f} cm "
+        f"({len(kept)}/{len(loops)} edges kept), "
         f"max correction {info['max_correction_m']*100:.1f} cm")
     return new, info

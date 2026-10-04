@@ -18,9 +18,9 @@ def build_scene(capture_dir, drift_correction=True, log=print) -> Scene:
     poses = cap.poses
     drift_info = {"method": "none (poses used as-is)", "enabled": False}
     if drift_correction:
-        from ..geometry.drift import correct_drift
+        from ..geometry.drift import correct_drift, lidar_cloud_fn
 
-        poses, drift_info = correct_drift(cap, kf, log=log)
+        poses, drift_info = correct_drift(cap.poses, kf, lidar_cloud_fn(cap), log=log)
     pc = fuse(cap, kf, poses=poses, stride=2, max_depth=5.0, min_conf=2, voxel=0.02)
     views = []
     for i in kf:
