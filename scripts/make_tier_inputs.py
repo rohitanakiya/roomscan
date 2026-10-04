@@ -49,6 +49,12 @@ def rotate_img(img, deg):
     return img
 
 
+def median_depth(cap, i):
+    d = cap.load_depth(int(cap.frame_ids[i]), min_conf=1)
+    d = d[d > 0] if d is not None else np.zeros(0)
+    return float(np.median(d)) if len(d) else 0.0
+
+
 def main(capture, lidar_result, out_root, max_per_room=8):
     capture, out_root = Path(capture), Path(out_root)
     name = capture.name
@@ -88,6 +94,10 @@ def main(capture, lidar_result, out_root, max_per_room=8):
         inside = np.nonzero(P.contains_points(cam_uv) & (dang < 1.5) & (np.abs(pitch) < 45))[0]
         if len(inside) < 2:
             continue
+        # a person photographs the room, not a curtain at 30 cm: keep views whose median depth is >= 1.2 m
+        wide = [i for i in inside[:: max(1, len(inside) // 300)] if median_depth(cap, i) >= 1.2]
+        if len(wide) >= 2:
+            inside = np.array(wide)
         # greedy max-spread in yaw (a person turning around the room), keep 6
         chosen = [inside[np.argmin(dang[inside])]]
         while len(chosen) < min(6, len(inside)):
