@@ -108,7 +108,7 @@ def property_to_json(prop, scene, extra=None):
             wall_sharpness=prop.meta.get("wall_sharpness"),
         ),
         rooms=rooms_js,
-        warnings=prop.meta.get("warnings", []),
+        warnings=prop.meta.get("warnings", []) + scene.meta.get("warnings", []),
     )
     if extra:
         out.update(extra)

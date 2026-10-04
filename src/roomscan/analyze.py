@@ -69,6 +69,8 @@ def analyze(scene, P: LayoutParams | None = None, log=print) -> Property:
             r.meta["name"] = s["name"]
         rooms.append(r)
 
+    warnings = mirror_check(rooms, q, log)
+
     # adjacency from doors/passages whose far side lands in another room
     by_label = {r.label: r for r in rooms}
     adj = {}
@@ -96,7 +98,41 @@ def analyze(scene, P: LayoutParams | None = None, log=print) -> Property:
             overlaps += polys[i].intersection(polys[j]).area
     return Property(scene.tier, F, rooms, adjacency, R, labels, footprint,
                     meta=dict(room_overlap_m2=round(overlaps, 4), q_points=len(q),
-                              wall_sharpness=wall_sharpness(q, nq, rooms)))
+                              wall_sharpness=wall_sharpness(q, nq, rooms), warnings=warnings))
+
+
+def mirror_check(rooms, q, log=print, tol=0.04, frac=0.6):
+    """A mirror on a wall looks like an opening with a room behind it — but that 'room' is this room reflected
+    in the wall plane. Reflect this room's points across the wall; if most points seen through the gap land on
+    reflected points, the opening is a mirror: it is removed and a warning is emitted."""
+    from scipy.spatial import cKDTree
+
+    warnings = []
+    for r in rooms:
+        keep = []
+        for op in r.openings:
+            w = r.walls[op.wall_index]
+            ax_n, ax_t = (1, 0) if w["orient"] == "H" else (0, 1)
+            c, inward = w["coord"], w["inward"]
+            depth_out = (c - q[:, ax_n]) * inward          # > 0 beyond the wall
+            lo, hi = min(op.t0, op.t1), max(op.t0, op.t1)
+            far = q[(depth_out > 0.2) & (depth_out < 3.0) & (q[:, ax_t] > lo) & (q[:, ax_t] < hi)
+                    & (q[:, 2] > 0.3) & (q[:, 2] < 2.0)]
+            near = q[(depth_out < -0.05) & (depth_out > -3.0) & (q[:, 2] > 0.3) & (q[:, 2] < 2.0)]
+            if len(far) < 200 or len(near) < 200:
+                keep.append(op)
+                continue
+            refl = near.copy()
+            refl[:, ax_n] = 2 * c - refl[:, ax_n]
+            d, _ = cKDTree(refl[::2]).query(far[:: max(1, len(far) // 3000)])
+            if (d < tol).mean() > frac:
+                warnings.append(f"{r.id}: opening on wall {w['index']} ({op.width:.2f} m) is a mirror (reflection "
+                                f"match {(d < tol).mean():.0%}); removed")
+                log("  " + warnings[-1])
+                continue
+            keep.append(op)
+        r.openings = keep
+    return warnings
 
 
 def wall_sharpness(q, nq, rooms, band=0.15, tol=0.02):
