@@ -77,7 +77,7 @@ converted to our JSON drops straight in).
 - **Mirrors** (bathroom): LiDAR returns the mirrored room behind the glass → phantom free space; damage
   orthomosaics on that wall are reflections. Openings found on a wall are not filtered for mirror symmetry yet.
 - **Glass shower screens / glass doors**: partly transparent to LiDAR; walls behind them are seen through
-  reflections → damage detection unreliable there (staged stain missed behind the screen, §5).
+  reflections → damage detection unreliable there (a first staging in the bathroom, behind the screen and opposite the mirror, scored 0/2; kept as a failure case, DECISIONS D19).
 - **Wet-look / glossy floors**: specular dropouts in depth; floors are not assessed for damage.
 - **Low light**: LiDAR unaffected; mono-depth and KLT degrade — the video tier falls back to ICP/constant velocity
   (counted in `capture.odometry`) and its intervals are scale-dominated anyway.

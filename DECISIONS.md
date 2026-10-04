@@ -136,3 +136,11 @@ frame −1 (the encoder drops the first frame), so ffmpeg returned one image few
 after it was paired with the previous keyframe's pose — a one-frame shift that blurred thin features (the staged
 crack disappeared from the orthomosaic). Frames without a video frame are now dropped up front and the
 extraction count is asserted. Same guard added to tier-input derivation. Staged damage: recall 2/2.
+
+## D21. A cache must know what produced it
+The first benchmark after D20 still scored the staged crack as missed, while fresh standalone runs found it.
+Cause: `--force` re-ran the pipeline but each run folder kept its `frames_640/` images, extracted before the
+D20 fix, so the images were still paired with the wrong poses. Two guards: `run_benchmark.py --force` now deletes a run's outputs
+(including damage caches) before running, and the frame cache stores a manifest (video path, size, mtime, frame
+offset, width, `CACHE_VERSION`) and rebuilds itself on any mismatch. Clean re-run: staged damage recall 2/2
+(stain area +6.7 %, inside its 95 % interval; crack length −17.5 %), 1 false positive; geometry numbers unchanged.
