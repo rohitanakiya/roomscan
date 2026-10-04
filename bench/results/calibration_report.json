@@ -1,6 +1,6 @@
 {
- "walls": 36,
- "gross_mismatch": 14,
+ "walls": 37,
+ "gross_mismatch": 15,
  "coverage_uncalibrated": 0.5909090909090909,
  "loo": [
   {
@@ -8,14 +8,14 @@
    "k": 0.0,
    "face_floor": 0.075,
    "test_coverage": 1.0,
-   "n_test": 13
+   "n_test": 12
   },
   {
    "held_out": "floor_only~single_room",
    "k": 0.0,
    "face_floor": 0.065,
-   "test_coverage": 0.75,
-   "n_test": 4
+   "test_coverage": 0.8,
+   "n_test": 5
   },
   {
    "held_out": "with_ceiling~single_room",

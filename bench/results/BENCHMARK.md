@@ -1,6 +1,6 @@
 # Benchmark results
 
-Generated 2026-10-04 12:20:54 by `python bench/run_benchmark.py`. No laser ground truth exists for the sample data; 'reference' below is another capture or the LiDAR tier of the same capture, as stated per table.
+Generated 2026-10-04 12:59:22 by `python bench/run_benchmark.py`. No laser ground truth exists for the sample data; 'reference' below is another capture or the LiDAR tier of the same capture, as stated per table.
 
 > NOTE: depth weights not present: video and photo tiers not run
 
@@ -8,23 +8,23 @@ Generated 2026-10-04 12:20:54 by `python bench/run_benchmark.py`. No laser groun
 
 | run | rooms | footprint m² [95% CI] | wall sharpness (±2 cm / ±15 cm) | loop residual before→after cm | loop edges kept | total s |
 |---|---|---|---|---|---|---|
-| lidar/single_room | 4 | 23.12 [21.68, 24.55] | 0.6998 | 8.4 → 2.7 | 4 | 120.3 |
-| lidar/single_room/no_drift | 4 | 23.86 [22.42, 25.30] | 0.6065 | — | — | 5.8 |
-| lidar/floor_only | 5 | 63.89 [61.74, 66.04] | 0.4847 | 14.5 → 6.1 | 14 | 166.6 |
-| lidar/floor_only/no_drift | 5 | 64.69 [62.53, 66.85] | 0.4981 | — | — | 21.2 |
-| lidar/with_ceiling | 5 | 68.03 [65.39, 70.67] | 0.4622 | 10.2 → 3.3 | 68 | 435.4 |
-| lidar/with_ceiling/no_drift | 4 | 71.08 [68.35, 73.80] | 0.3528 | — | — | 39.0 |
+| lidar/single_room | 4 | 23.12 [21.68, 24.55] | 0.6998 | 8.4 → 2.7 | 4 | 104.2 |
+| lidar/single_room/no_drift | 4 | 23.86 [22.42, 25.30] | 0.6065 | — | — | 5.5 |
+| lidar/floor_only | 5 | 63.80 [61.65, 65.95] | 0.489 | 14.5 → 6.1 | 14 | 258.3 |
+| lidar/floor_only/no_drift | 5 | 64.25 [62.11, 66.39] | 0.5145 | — | — | 21.1 |
+| lidar/with_ceiling | 5 | 68.10 [65.46, 70.74] | 0.4625 | 10.2 → 3.3 | 68 | 583.2 |
+| lidar/with_ceiling/no_drift | 4 | 70.77 [68.05, 73.50] | 0.3541 | — | — | 42.2 |
 
 ## Comparisons
 
 | comparison | reg. score | room pairs | walls | median |Δ| cm | median |Δ| % | repeatable (≤1 cm/0.5%) % | ≤3% % | ≤8% % | ref in 95% CI % | openings matched/missed/phantom | opening ≤2 cm % |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| repeat:floor_only~with_ceiling | 0.329 | 5 | 23 | 24.0 | 12.06 | 4.3 | 30.4 | 47.8 | 47.8 | 3/6/7 | 6.2 |
-| repeat:floor_only~with_ceiling/no_drift | 0.301 | 4 | 19 | 25.2 | 20.61 | 0.0 | 10.5 | 36.8 | 36.8 | 2/8/3 | 0.0 |
-| repeat:with_ceiling~single_room | 0.314 | 2 | 7 | 25.3 | 11.02 | 28.6 | 42.9 | 42.9 | 42.9 | 1/4/2 | 14.3 |
-| repeat:with_ceiling~single_room/no_drift | 0.282 | 1 | 2 | 154.35 | 25.36 | 0.0 | 50.0 | 50.0 | 50.0 | 0/0/1 | 0.0 |
-| repeat:floor_only~single_room | 0.289 | 2 | 6 | 17.55 | 7.06 | 16.7 | 50.0 | 50.0 | 50.0 | 0/1/3 | 0.0 |
-| repeat:floor_only~single_room/no_drift | 0.236 | 2 | 8 | 33.85 | 12.01 | 12.5 | 12.5 | 37.5 | 37.5 | 1/1/2 | 0.0 |
+| repeat:floor_only~with_ceiling | 0.331 | 5 | 24 | 31.15 | 16.16 | 4.2 | 29.2 | 41.7 | 45.8 | 3/5/7 | 6.7 |
+| repeat:floor_only~with_ceiling/no_drift | 0.297 | 4 | 18 | 31.75 | 26.38 | 0.0 | 16.7 | 33.3 | 27.8 | 2/7/3 | 0.0 |
+| repeat:with_ceiling~single_room | 0.312 | 2 | 7 | 25.3 | 11.02 | 28.6 | 42.9 | 42.9 | 42.9 | 1/4/2 | 14.3 |
+| repeat:with_ceiling~single_room/no_drift | 0.297 | 1 | 2 | 154.35 | 25.36 | 0.0 | 50.0 | 50.0 | 50.0 | 0/0/1 | 0.0 |
+| repeat:floor_only~single_room | 0.294 | 2 | 6 | 11.95 | 4.22 | 16.7 | 50.0 | 66.7 | 66.7 | 0/1/3 | 0.0 |
+| repeat:floor_only~single_room/no_drift | 0.258 | 2 | 8 | 24.85 | 10.03 | 0.0 | 0.0 | 37.5 | 37.5 | 1/1/2 | 0.0 |
 
 ## Ceiling heights (with_ceiling capture)
 
@@ -38,18 +38,18 @@ Generated 2026-10-04 12:20:54 by `python bench/run_benchmark.py`. No laser groun
 
 ## Staged damage
 
-recall 0.00, false positives 0, clean-capture false positives 1
+recall 0.50, false positives 1, clean-capture false positives 0
 
-- GT1 water_stain: detected=False 
+- GT1 water_stain: detected=True rel_err=0.067 rules=['CD-02']
 - GT2 crack: detected=False 
 
 ## Timing (s)
 
 | run | reconstruct | layout | damage | total |
 |---|---|---|---|---|
-| lidar/single_room | 33.8 | 1.5 | 84.5 | 120.3 |
-| lidar/single_room/no_drift | 4.6 | 1.0 |  | 5.8 |
-| lidar/floor_only | 87.5 | 6.7 | 72.1 | 166.6 |
-| lidar/floor_only/no_drift | 14.2 | 6.8 |  | 21.2 |
-| lidar/with_ceiling | 298.9 | 11.9 | 124.4 | 435.4 |
-| lidar/with_ceiling/no_drift | 26.8 | 11.9 |  | 39.0 |
+| lidar/single_room | 13.0 | 1.0 | 90.0 | 104.2 |
+| lidar/single_room/no_drift | 4.2 | 1.0 |  | 5.5 |
+| lidar/floor_only | 78.5 | 6.3 | 173.2 | 258.3 |
+| lidar/floor_only/no_drift | 13.9 | 7.0 |  | 21.1 |
+| lidar/with_ceiling | 312.7 | 12.0 | 258.2 | 583.2 |
+| lidar/with_ceiling/no_drift | 29.3 | 12.6 |  | 42.2 |

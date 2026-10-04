@@ -15,8 +15,8 @@ Status legend: **Done** = implemented and exercised by the benchmark; **Partial*
 | 7 | Same output contract from every tier | `src/roomscan/scene.py`, `analyze.py`, `export.py`, `schema/output.schema.json` | JSON validated by `tests/test_contract.py` | Done |
 | 8 | Intervals widen honestly as sensor data thins | `tiers/*.py` (`*_ERRORS`), `measure.py` | `error_budget_1sigma` per number | Done |
 | 9 | Dimensioned per-room plan: walls, ceiling height, floor area, openings | `geometry/room.py`, `geometry/openings.py` | `rooms[].walls/ceiling_height/floor_area/openings` | Done (ceiling *observed* only when the capture looks at it; else flagged prior) |
-| 10 | Stitched multi-room plan with correct adjacency | `analyze.py` (adjacency), `render.py` | `property.adjacency`, `plan.png/svg` | Partial (adjacency only where a door is detected) |
-| 11 | Per-surface damage regions with class and metric extent | `damage/pipeline.py`, `damage/detect.py` | `rooms[].damage[]` (surface_id, class, area Measure, bbox) | Partial (recall issue behind glass) |
+| 10 | Stitched multi-room plan with correct adjacency | `analyze.py` (adjacency), `geometry/openings.py`, `render.py` | `property.adjacency`, `plan.png/svg` | Partial (floor-aimed capture: all rooms linked by doors; ceiling-aimed capture: doors often unconfirmed) |
+| 11 | Per-surface damage regions with class and metric extent | `damage/pipeline.py`, `damage/detect.py` | `rooms[].damage[]` (surface_id, class, area Measure, bbox) | Done (staged: 2/2 found, stain area +7% in-interval; fails behind glass/mirror — documented) |
 | 12 | Concealed-damage flags with the rule that fired | `damage/rules.py` | `rooms[].concealed_damage_flags[]` (rule_id + text + evidence) | Done |
 | 13 | Scope line items keyed to surfaces | `damage/rules.py` | `rooms[].scope_items[]` | Done |
 | 14 | Confidence interval on every measurement | `measure.py`, `export.py` | `ci95` on every Measure | Done |
@@ -24,14 +24,14 @@ Status legend: **Done** = implemented and exercised by the benchmark; **Partial*
 | 16 | JSON to the published schema | `schema/output.schema.json` | schema + contract test | Done (own schema: the case study's "published schema" was not provided) |
 | 17 | Rendered plan | `src/roomscan/render.py` | `plan.png`, `plan.svg` | Done |
 | 18 | Benchmark: multi-room capture, ≥3 rooms + connector | `data/raw/floor_only`, `data/raw/with_ceiling` | sample captures (5 rooms + corridor) | Done (sample data) |
-| 19 | Benchmark: furnished room with staged damage, two classes | `bench/stage_damage.py`, `data/staged/single_room_staged/staged_truth.json` | digitally staged water stain + crack | Partial (digital staging, not physical) |
+| 19 | Benchmark: furnished room with staged damage, two classes | `bench/stage_damage.py`, `data/staged/single_room_staged/staged_truth.json` | digitally staged water stain + crack in the furnished room | Partial (digital staging, not physical) |
 | 20 | Same rooms at all three tiers, multi-room set included | `scripts/make_tier_inputs.py`, `data/tiers/` | derived video + per-room photo folders | Done (derived from LiDAR captures; disclosed) |
 | 21 | ≥1 room captured twice at the same tier | three LiDAR captures of the same flat | `bench/compare.py`, repeat:* rows | Done |
 | 22 | Laser/tape ground truth on everything | — | — | **N/A-data** (no access to the property) |
 | 23 | Gate: opening widths ≤2 cm on ≥85%, misses/phantoms scored | `bench/run_benchmark.py` | `opening_within_2cm_pct` (cross-capture) | see BENCHMARK.md |
 | 24 | Gate: ceiling ≤1.5 cm; repeat spread ≤1 cm; biased vs unrepeatable stated | `bench/run_benchmark.py`, report §5 | ceilings table | Partial (only one capture observes ceilings) |
 | 25 | Gate: repeatability ≤1 cm or 0.5% per wall | `bench/compare.py` | `wall_repeatable_pct` | see BENCHMARK.md |
-| 26 | Gate: drift accountability + on/off ablation of stitched footprint | `geometry/drift.py`, `--no-drift`, report §3 | ablation rows `*/no_drift` | Done |
+| 26 | Gate: drift accountability + on/off ablation of stitched footprint | `geometry/drift.py`, `--no-drift`, report §3, `bench/drift_tuning.md` | ablation rows `*/no_drift` (footprint, wall sharpness, loop residual) | Done |
 | 27 | Gate: photo-tier whole-property stitch, no overlaps, footprint ±8% | `tiers/photo_reg.py` | `photo_vs_lidar:*` rows | see BENCHMARK.md |
 | 28 | Photo ±8% / video ±3% wall lengths, calibration scored at every tier | `bench/compare.py` (`a_in_b_ci`) | `wall_ref_in_ci_pct` | see BENCHMARK.md |
 | 29 | Head-to-head vs consumer app on 2 rooms | `docs/TECHNICAL_REPORT.md` §8 | — | **N/A-data** (needs a consumer-app scan of the same rooms) |
@@ -45,3 +45,4 @@ Status legend: **Done** = implemented and exercised by the benchmark; **Partial*
 | 37 | Mirrors, glass, wet-look surfaces, low light covered | report §7, `docs/DEVICE_MATRIX.md` | failure-mode analysis | Done (analysis); detection partial |
 | 38 | Weights / large binaries fetched by script | `scripts/fetch_weights.py`, `.gitignore` | — | Done |
 | 39 | Runs without calling our infrastructure; models disclosed | README "Pretrained model disclosure" | — | Done |
+| 40 | Walk-in readiness | `docs/WALK_IN.md` | runbook | Done |

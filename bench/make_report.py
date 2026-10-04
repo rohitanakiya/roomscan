@@ -16,8 +16,38 @@ def fmt(x, nd=1, suf=""):
     return "—" if x is None else f"{x:.{nd}f}{suf}"
 
 
+def figures():
+    """Side-by-side figures for the report (copied from the benchmark run outputs)."""
+    from PIL import Image
+
+    out = ROOT / "docs" / "figures"
+    out.mkdir(parents=True, exist_ok=True)
+    runs = ROOT / "out" / "bench" / "lidar"
+
+    def strip(paths, dst, h=520):
+        ims = [Image.open(p).convert("RGB") for p in paths if Path(p).exists()]
+        if not ims:
+            return None
+        ims = [im.resize((int(im.width * h / im.height), h)) for im in ims]
+        W = sum(im.width for im in ims) + 10 * (len(ims) - 1)
+        c = Image.new("RGB", (W, h), "white")
+        x = 0
+        for im in ims:
+            c.paste(im, (x, 0))
+            x += im.width + 10
+        c.save(out / dst, optimize=True)
+        return f"figures/{dst}"
+    f1 = strip([runs / c / "plan.png" for c in ("floor_only", "with_ceiling", "single_room")], "plans_lidar.png")
+    f2 = strip([runs / "with_ceiling" / "no_drift" / "plan.png", runs / "with_ceiling" / "plan.png"], "drift_ablation.png")
+    return f1, f2
+
+
 def main():
     B = json.load(open(ROOT / "bench" / "results" / "benchmark.json"))
+    try:
+        f1, f2 = figures()
+    except Exception:
+        f1 = f2 = None
     T = (ROOT / "docs" / "report_template.md").read_text()
     runs = B["runs"]
     # drift table
@@ -41,9 +71,14 @@ def main():
                 f"with correction vs {off.get('registration', {}).get('score')} without; walls within 3%: "
                 f"{on.get('wall_within_3pct')}% vs {off.get('wall_within_3pct')}%; median |ΔL| {on.get('wall_abs_err_cm_median')} vs "
                 f"{off.get('wall_abs_err_cm_median')} cm.")
+    if f2:
+        rows.append(f"\n![with_ceiling stitched plan, drift correction off (left) and on (right)]({f2})")
     T = T.replace("{{DRIFT_TABLE}}", "\n".join(rows))
     # results
-    R = ["### LiDAR repeatability (same tier, different captures of the same rooms)",
+    R = []
+    if f1:
+        R.append(f"![Stitched LiDAR plans: floor_only, with_ceiling, single_room (one command each)]({f1})\n")
+    R += ["### LiDAR repeatability (same tier, different captures of the same rooms)",
          "| pair | room pairs | walls | median \\|ΔL\\| cm | within 1 cm/0.5% | within 3% | within 8% | ref in 95% CI | openings matched/missed/phantom | opening ≤ 2 cm |",
          "|---|---|---|---|---|---|---|---|---|---|"]
     for k, s in comp.items():
