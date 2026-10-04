@@ -149,7 +149,12 @@ def detect_ortho(lab_mean, valid, res):
     score = np.clip((Lb - L) / 15.0, 0, None) + np.clip((b - bb) / 8.0, 0, None)
     score[~valid] = 0
     # stains: smooth blobs
-    cand = ndi.binary_opening(score > 1.0, iterations=2)
+    seed = ndi.binary_opening(score > 1.0, iterations=2)
+    # hysteresis: grow each seed into its diffuse halo (stains fade out; the core alone under-sizes them)
+    grow = (score > 0.45) & valid
+    lab_g, _ = ndi.label(grow)
+    keep_ids = np.unique(lab_g[seed & grow])
+    cand = np.isin(lab_g, keep_ids[keep_ids > 0])
     cand = ndi.binary_closing(cand, iterations=2) & valid
     lab_img, n = ndi.label(cand)
     for i in range(1, n + 1):
@@ -173,21 +178,25 @@ def detect_ortho(lab_mean, valid, res):
     bh = cv2.morphologyEx(Lu, cv2.MORPH_BLACKHAT, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))).astype(np.float32)
     bh[~ndi.binary_erosion(valid, iterations=3)] = 0
     ridge = bh > max(18, np.percentile(bh[valid], 99.0) if valid.any() else 18)
-    lab_img, n = ndi.label(ridge, structure=np.ones((3, 3)))
+    # bridge 1-2 cell breaks along a crack before measuring it
+    ridge_c = ndi.binary_closing(ridge, structure=np.ones((5, 5)))
+    lab_img, n = ndi.label(ridge_c, structure=np.ones((3, 3)))
     for i in range(1, n + 1):
-        m = lab_img == i
+        m = (lab_img == i) & ridge
         ys, xs = np.nonzero(m)
         if len(xs) < 10:
             continue
         length = np.hypot(np.ptp(xs) + 1, np.ptp(ys) + 1) * res
-        if length < 0.15 or m.sum() * res / max(length, 1e-6) > 0.012:   # mean width > 12 mm
+        if length < 0.15 or m.sum() * res * res / max(length, 1e-6) > 0.02:   # mean width > 20 mm: not a crack
             continue
-        c = np.cov(np.c_[xs, ys].T.astype(float))
+        P2 = np.c_[xs, ys].astype(float)
+        c = np.cov(P2.T)
         ev, evec = np.linalg.eigh(c)
-        straight = 1 - ev[0] / (ev[1] + 1e-9)
         ang = np.degrees(np.arctan2(evec[1, 1], evec[0, 1])) % 90
         axis_aligned = min(ang, 90 - ang) < 4
-        if straight > 0.985 and axis_aligned:
+        # cracks wander; grout lines, panel joints and edges do not. Max deviation from the best-fit line:
+        dev = np.abs((P2 - P2.mean(0)) @ evec[:, 0]).max() * res
+        if dev < 0.012 and (axis_aligned or length > 0.5):
             continue
         out.append(dict(cls="crack", mask=ndi.binary_dilation(m), score=float(bh[m].mean() / 40), length_m=length))
     # mould: dark speckle clusters (high local variance of darkness)

@@ -23,7 +23,7 @@ MIN_VIEWS = 3
 MAX_VIEWS_PER_SURFACE = 15
 MIN_RATIO = 0.5
 MIN_AREA = {"water_stain": 0.010, "mould": 0.010, "crack": 0.0020}
-MIN_CRACK_LEN = 0.15
+MIN_CRACK_LEN = 0.30   # shorter dark ridges on the sample walls were frames, switches, shadows
 # Bands excluded from detection: skirting / floor junction, cornice / ceiling junction, wall ends
 # (corner shadows), ceiling perimeter. Floors are not assessed (tile grout and reflections were
 # the dominant false positives on the sample captures).
@@ -90,7 +90,7 @@ def _surface_normal_world(s, F):
     return np.array([nx, 0.0, nz])
 
 
-def lidar_views(scene, work: Path, max_views=48, width=640):
+def lidar_views(scene, work: Path, max_views=96, width=640):
     from ..io.stray import estimate_rgb_offset, load_stray
 
     cap = load_stray(scene.meta["capture"])
@@ -251,13 +251,15 @@ def run_damage(scene, prop, out_dir: Path, log=print, views=None, debug_dir=None
                 xy = [s["lo"][0] + (cols.mean() + 0.5) * RES, s["lo"][1] + (rows.mean() + 0.5) * RES]
             # area uncertainty: boundary cells half in / half out + LiDAR/pose registration
             perim = m.sum() - ndi.binary_erosion(m).sum()
-            am = combine(area, unit="m2", boundary=0.5 * perim * RES * RES, registration=0.1 * area)
+            # diffuse stain edges: where the boundary sits is uncertain by ~2 cm all round
+            am = combine(area, unit="m2", boundary=perim * RES * 0.02, registration=0.1 * area)
             reg = dict(id=rid, surface_id=s["id"], **{"class": cls}, area=am.to_json(4), bbox=bbox,
                        plan_xy=[round(float(xy[0]), 3), round(float(xy[1]), 3)], views=views_support,
                        confidence=round(float(min(1.0, 0.5 + 0.1 * views_support)), 2))
             if cls == "crack":
                 reg["length_m"] = round(float(np.hypot(bbox["width_m"], bbox["height_m"])), 3)
-                if reg["length_m"] < MIN_CRACK_LEN:
+                elong = max(bbox["width_m"], bbox["height_m"]) / max(min(bbox["width_m"], bbox["height_m"]), 1e-3)
+                if reg["length_m"] < MIN_CRACK_LEN or elong < 3.0:
                     n_reg -= 1
                     continue
             surf = dict(id=s["id"], kind=s["kind"], ref=s["ref"])

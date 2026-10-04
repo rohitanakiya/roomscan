@@ -119,3 +119,13 @@ The contract test caught rooms overlapping by up to 1.75 m² after the "outermos
 edges past thin walls into the neighbour. Candidates whose room-side neighbourhood lies in another room's labelled
 cells are now rejected. Residual overlap: 0.09 / 0.34 / 0.84 m² (single / floor / ceiling capture), reported per
 run as `room_overlap_m2`.
+
+## D19. Staged damage moved to the furnished room; damage detector fixes
+The case study asks for damage staged in a *furnished* room; the first staging used the "primary" room, which
+was the bathroom (glass screen + mirror), and recall was 0/2. Re-staged on the two best-observed walls of the
+largest room (sofa, wardrobe). Three detector bugs found on the way: (1) crack width was computed in the wrong
+units (every crack rejected); (2) the grout-line filter rejected any straight-ish vertical crack — replaced by
+max deviation from the best-fit line (cracks wander ≥ 1.2 cm); (3) stain area used only the dark core —
+hysteresis growth into the diffuse halo (area error 54% → 7%). Result: recall 2/2 (stain area +7%, inside its
+interval, CD-02 fires; crack length −17%), 1 false positive on the staged capture. The bathroom staging is kept
+in data/staged/single_room_staged_bathroom as a documented failure case (glass/mirror).

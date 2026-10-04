@@ -76,8 +76,14 @@ def main(src, dst, room_id=None, truth_only=False):
     from roomscan.export import property_to_json
 
     res = property_to_json(prop, scene)
-    room = next(r for r in res["rooms"] if (r["id"] == room_id if room_id else r["primary"]))
-    walls = sorted([w for w in room["walls"] if w["face_observed"]], key=lambda w: -w["face_points"])
+    if room_id == "largest":
+        # the furnished living room (sofa, wardrobe) is the largest room of this capture; the case study asks for
+        # damage staged in a furnished room
+        room = max(res["rooms"], key=lambda r: r["floor_area"]["value"])
+    else:
+        room = next(r for r in res["rooms"] if (r["id"] == room_id if room_id else r["primary"]))
+    walls = sorted([w for w in room["walls"] if w["face_observed"] and w["length"]["value"] > 1.2],
+                   key=lambda w: -w["face_points"])
     W1, W2 = walls[0], walls[1]
     F = prop.frame
     patches = [
