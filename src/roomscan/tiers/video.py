@@ -185,7 +185,48 @@ def gravity_align(poses, xyz_fn):
     return np.eye(3) + vx + vx @ vx * ((1 - c) / s**2)
 
 
-def build_scene(video, work: Path, fps=3.0, depth_source=None, log=print) -> Scene:
+def _track_chain(imgs, i0, i1, max_corners=800):
+    """KLT-track corners from frame i0 through every frame up to i1 (high-rate tracking keeps
+    per-step motion small). Returns (pts_i0, pts_i1) of surviving tracks."""
+    g = cv2.cvtColor(imgs[i0], cv2.COLOR_BGR2GRAY)
+    p0 = cv2.goodFeaturesToTrack(g, max_corners, 0.005, 8)
+    if p0 is None:
+        return None, None
+    start = p0.copy()
+    cur = p0
+    alive = np.ones(len(p0), bool)
+    for k in range(i0 + 1, i1 + 1):
+        g1 = cv2.cvtColor(imgs[k], cv2.COLOR_BGR2GRAY)
+        nxt, st, _ = cv2.calcOpticalFlowPyrLK(g, g1, cur, None, winSize=(21, 21), maxLevel=3)
+        back, stb, _ = cv2.calcOpticalFlowPyrLK(g1, g, nxt, None, winSize=(21, 21), maxLevel=3)
+        ok = (st[:, 0] == 1) & (stb[:, 0] == 1) & (np.linalg.norm(back - cur, axis=2)[:, 0] < 1.0)
+        alive &= ok
+        cur, g = nxt, g1
+    return start[alive, 0], cur[alive, 0]
+
+
+def _pnp_from_tracks(p0, p1, d0, K):
+    if p0 is None or len(p0) < 12:
+        return None, 0
+    u, v = p0[:, 0].astype(int), p0[:, 1].astype(int)
+    z = d0[v.clip(0, d0.shape[0] - 1), u.clip(0, d0.shape[1] - 1)]
+    m = (z > 0.2) & (z < 8)
+    if m.sum() < 12:
+        return None, int(m.sum())
+    X = np.c_[(p0[m, 0] - K[0, 2]) / K[0, 0] * z[m], (p0[m, 1] - K[1, 2]) / K[1, 1] * z[m], z[m]]
+    ok, rvec, tvec, inl = cv2.solvePnPRansac(X, p1[m], K, None, reprojectionError=2.0, iterationsCount=300,
+                                             flags=cv2.SOLVEPNP_EPNP)
+    if not ok or inl is None or len(inl) < 12:
+        return None, 0 if inl is None else len(inl)
+    rvec, tvec = cv2.solvePnPRefineLM(X[inl[:, 0]], p1[m][inl[:, 0]], K, None, rvec, tvec)
+    R, _ = cv2.Rodrigues(rvec)
+    T10 = np.eye(4)
+    T10[:3, :3], T10[:3, 3] = R, tvec[:, 0]
+    return np.linalg.inv(T10), len(inl)
+
+
+def build_scene(video, work: Path, fps=10.0, depth_every=3, depth_source=None, log=print) -> Scene:
+    """fps: tracking rate; depth runs on every `depth_every`-th tracked frame (keyframes)."""
     from ..geometry.drift import correct_drift
     from ..geometry.fusion import select_keyframes
     from ..models.depth import MonoDepth
@@ -197,43 +238,54 @@ def build_scene(video, work: Path, fps=3.0, depth_source=None, log=print) -> Sce
     work = Path(work)
     files = extract_frames(video, work / "frames", fps=fps)
     imgs = [cv2.imread(str(f)) for f in files]
-    sh = np.array([sharpness(i) for i in imgs])
-    keep = sh > 0.25 * np.median(sh)
-    files = [f for f, k in zip(files, keep) if k]
-    imgs = [i for i, k in zip(imgs, keep) if k]
     h, w = imgs[0].shape[:2]
+    # keyframes: every `depth_every`-th frame, nudged to the sharpest frame in its window
+    sh = np.array([sharpness(i) for i in imgs])
+    kfi = []
+    for s0 in range(0, len(imgs), depth_every):
+        win = range(s0, min(s0 + depth_every, len(imgs)))
+        kfi.append(max(win, key=lambda i: sh[i]))
     f0 = FOCAL_PRIOR * max(h, w)
-    f_vp, f_spread = focal_from_vanishing_points(imgs[:: max(1, len(imgs) // 40)], f0)
+    f_vp, f_spread = focal_from_vanishing_points([imgs[i] for i in kfi[:: max(1, len(kfi) // 40)]], f0)
     f = f_vp
     K = np.array([[f, 0, w / 2], [0, f, h / 2], [0, 0, 1.0]])
-    log(f"  video: {len(imgs)} frames ({fps} fps, {sum(~keep)} blurred dropped), {w}x{h}, focal prior {f0:.0f}px, "
-        f"VP focal {f_vp:.0f}px")
-
+    log(f"  video: {len(imgs)} frames tracked at {fps} fps, {len(kfi)} depth keyframes, {w}x{h}, "
+        f"focal prior {f0:.0f}px, VP focal {f_vp:.0f}px")
     depth_model = depth_source or MonoDepth(cache_dir=work.parent.parent / ".cache" / "depth")
     depths = []
-    for k, im in enumerate(imgs):
-        d = depth_model.predict(cv2.cvtColor(im, cv2.COLOR_BGR2RGB)) * DEPTH_SCALE
-        depths.append(d)
+    for k, i in enumerate(kfi):
+        if hasattr(depth_model, "set_index"):
+            depth_model.set_index(i)
+        depths.append(depth_model.predict(cv2.cvtColor(imgs[i], cv2.COLOR_BGR2RGB)) * DEPTH_SCALE)
         if k % 50 == 0:
-            log(f"  depth {k}/{len(imgs)}")
-
+            log(f"  depth {k}/{len(kfi)}")
     poses = [np.eye(4)]
-    n_pnp = n_icp = 0
-    for k in range(1, len(imgs)):
-        T, ninl = _pnp_step(imgs[k - 1], imgs[k], depths[k - 1], K)
-        if T is None or np.linalg.norm(T[:3, 3]) > 0.8:
-            T, fit = _icp_step(depth_cloud(depths[k - 1], K), depth_cloud(depths[k], K))
-            n_icp += 1
-        else:
+    n_pnp = n_icp = n_cv = 0
+    last = np.eye(4)
+    for k in range(1, len(kfi)):
+        p0, p1 = _track_chain(imgs, kfi[k - 1], kfi[k])
+        T, ninl = _pnp_from_tracks(p0, p1, depths[k - 1], K)
+        if T is not None and np.linalg.norm(T[:3, 3]) < 0.6:
             n_pnp += 1
+        else:
+            # textureless / blurred step: depth ICP seeded with constant velocity, else constant velocity
+            T, fit = _icp_step(depth_cloud(depths[k - 1], K), depth_cloud(depths[k], K), init=last)
+            if fit > 0.3 and np.linalg.norm(T[:3, 3]) < 0.4:
+                n_icp += 1
+            else:
+                T = last
+                n_cv += 1
+        last = T
         poses.append(poses[-1] @ T)
     poses = np.array(poses)
-    log(f"  odometry: {n_pnp} PnP steps, {n_icp} ICP fallbacks")
+    files = [files[i] for i in kfi]
+    imgs = [imgs[i] for i in kfi]
+    log(f"  odometry: {n_pnp} PnP steps, {n_icp} ICP fallbacks, {n_cv} constant-velocity bridges")
 
     def cloud_fn(i):
         return depth_cloud(depths[i], K, stride=6, max_depth=4.0)
 
-    kf = select_keyframes(poses, 0.15, 10, 6)
+    kf = select_keyframes(poses, 0.10, 8, 4)
     poses, drift_info = correct_drift(poses, kf, cloud_fn, frag_len=6, voxel=0.06, max_pair_dist=3.0,
                                       icp_rmse=0.04, fit_min=0.3, max_jump=0.6, log=log)
 
@@ -262,7 +314,8 @@ def build_scene(video, work: Path, fps=3.0, depth_source=None, log=print) -> Sce
     return Scene(tier="video", xyz=np.asarray(pcd.points), normals=np.asarray(pcd.normals),
                  cam_centres=poses[kf, :3, 3], views=views, path_length_m=path_len, error_model=VIDEO_ERRORS,
                  images=images,
-                 meta=dict(capture=str(video), frames=len(imgs), keyframes=len(kf), fps=fps,
+                 meta=dict(capture=str(video), frames_tracked=len(sh), depth_keyframes=len(imgs), keyframes=len(kf),
+                           fps=fps,
                            focal_px=round(f, 1), focal_prior_px=round(f0, 1),
-                           odometry=dict(pnp=n_pnp, icp=n_icp), drift=drift_info,
+                           odometry=dict(pnp=n_pnp, icp=n_icp, constant_velocity=n_cv), drift=drift_info,
                            depth_model="Depth-Anything-V2-Metric-Indoor-Small", depth_scale=DEPTH_SCALE))

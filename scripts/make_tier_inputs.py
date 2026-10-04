@@ -61,7 +61,9 @@ def main(capture, lidar_result, out_root, max_per_room=8):
     vout = vdir / f"{name}.mp4"
     if not vout.exists():
         vf = ROT[deg]
-        cmd = ["ffmpeg", "-v", "error", "-y", "-i", str(capture / "rgb.mp4"), "-map_metadata", "-1"]
+        # passthrough keeps the original (variable) frame timing; a CFR re-encode duplicated 30% of frames
+        cmd = ["ffmpeg", "-v", "error", "-y", "-i", str(capture / "rgb.mp4"), "-map_metadata", "-1",
+               "-fps_mode", "passthrough"]
         if vf:
             cmd += ["-vf", vf]
         cmd += ["-c:v", "libx264", "-crf", "20", "-preset", "veryfast", "-pix_fmt", "yuv420p", "-an", str(vout)]

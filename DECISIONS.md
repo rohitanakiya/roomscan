@@ -82,3 +82,13 @@ photos see too little of each room. Intervals for this tier are calibrated to th
 Room identity from the watershed (door-width splitting); room geometry from the wall-line
 arrangement (cells snapped to fitted faces). Pure cell decomposition merged rooms through
 unobserved wall stretches (floor-only capture became one 61 m² room).
+
+## D14. Video odometry: track at 10 fps, depth at keyframes, KLT chains
+3 fps tracking lost tracks on turns (per-step error ≈ step size). Chained KLT at ~10 fps with
+forward-backward checks between depth keyframes (every 3rd frame) gives cm-level PnP steps
+(oracle depth: 0.1–1.5 cm error per 0.3 s step). Steps with no surviving tracks fall back to
+depth ICP seeded with constant velocity, else constant velocity. Oracle-depth test (LiDAR
+depth on the video frames — a dev-only test of the odometry, not a reported number): path
+13.9 m vs ARKit 14.5 m; main room area −3.9%.
+Also: the raw Stray video is VFR (avg 46 fps); a CFR re-encode duplicated 30% of frames and
+broke any index-based alignment — tier inputs now keep `-fps_mode passthrough`.
