@@ -77,3 +77,32 @@ within 0.5 m whose points reach the floor (5th-percentile height < 0.45 m); fall
 **Prediction (floor_only~with_ceiling):** the three +15–26 cm walls of the IoU-0.87 pair agree within 3 cm; matched
 walls within tolerance rise from 16.7% to **25–40%**; the gate still **fails** (wide-opening segmentation and
 ~2–3 cm inter-capture face offsets remain).
+
+## Part D — Result of iteration 2 (tag `fixloop2-after`; regenerate: `bash bench/fix_loop/run.sh 2-after`)
+
+| metric (floor_only ~ with_ceiling unless noted) | iter-1 after | predicted | iter-2 after |
+|---|---|---|---|
+| walls within 1 cm / 0.5% (declared gate metric) | 16.7% (3/18) | 25–40% | **5.3%** (1/19) |
+| with_ceiling~single_room, same metric | 23.1% (3/13) | — | 0.0% (0/12) |
+| median \|ΔL\| on matched walls | 24.9 cm | — | **9.2 cm** |
+| walls within 3% / within 8% | 27.8% / 50.0% | — | **31.6% / 63.2%** |
+| matched-room IoU | 0.42/0.35/0.87/0.66/0.69 | — | 0.43/0.36/**0.92/0.79**/0.68 |
+| the three +15–26 cm walls of the IoU-0.87 room | +15.6 / +26.2 / +15.3 cm | each < 3 cm | +20.7 / **+3.7** / +9.2 cm |
+| gate (≥ 85% of walls) | FAIL | FAIL | **FAIL** |
+
+**Post-mortem.** The furniture-front cause was real — R3-W1 went from +26.2 cm to +3.7 cm, the median wall
+difference dropped from 24.9 to 9.2 cm and the ≤3%/≤8% bands rose — but the prediction on the declared metric was
+wrong in direction: the 1 cm/0.5% count fell from 3 to 1 wall. Two reasons, both visible in
+`bench/fix_loop/evidence_faces.txt` for the matched rooms after the change:
+1. **Drift duplicates inside one capture.** Several walls of the ceiling-aimed capture show two strong room-facing
+   layers 6–10 cm apart with *different height ranges* (e.g. R4-W2: 0.25–1.89 m at 0 cm, 1.89–3.09 m at +6/+8 cm):
+   the same wall seen on two passes whose poses still disagree after loop closure (loop residual 10.5 → 3.2 cm on
+   average, larger locally). "Outermost layer" then systematically picks the outer duplicate.
+2. **The tolerance is below our inter-capture noise floor.** Walls that were already within 1 cm in iteration 1
+   moved by the few centimetres the new face rule introduces; with ~20 walls per pair, 1–3 walls inside a 1 cm band
+   is noise, not signal. The ≤3% and median metrics, which are not, both improved.
+
+**What fixing it fully needs:** pose consistency *within* each capture at the 1 cm level (denser loop closures and
+plane-to-plane constraints on revisited walls), so that each wall is one layer, before any face rule. That is the
+next fix, not shipped here. Meanwhile the intervals are widened to the repeatability we can actually demonstrate
+(technical report §6), so the plan is not confidently wrong.
