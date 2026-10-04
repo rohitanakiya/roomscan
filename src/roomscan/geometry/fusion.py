@@ -68,4 +68,23 @@ def fuse(capture, frame_idx, poses=None, stride=2, max_depth=4.5, min_conf=2, vo
     pcd, _, idx = pcd.voxel_down_sample_and_trace(voxel, pcd.get_min_bound(), pcd.get_max_bound())
     keep_src = np.array([srcs[ix[0]] for ix in idx]) if len(idx) else None
     pcd.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=voxel * 4, max_nn=30))
-    return PointCloud(np.asarray(pcd.points), np.asarray(pcd.normals), keep_src)
+    P, N = np.asarray(pcd.points), np.asarray(pcd.normals).copy()
+    if keep_src is not None:
+        N = orient_towards(P, N, poses[keep_src, :3, 3])
+    return PointCloud(P, N, keep_src)
+
+
+def orient_towards(P, N, cams):
+    """Flip normals to face the camera that observed each point. A wall's room-side face then has
+    its normal pointing into the room, and the neighbour room's face of the same wall points away —
+    which is what lets wall snapping tell 'this room's wall' from 'the next room's wall'."""
+    flip = np.einsum("ij,ij->i", N, cams - P) < 0
+    N[flip] *= -1
+    return N
+
+
+def orient_to_nearest(P, N, cams):
+    from scipy.spatial import cKDTree
+
+    _, j = cKDTree(cams).query(P)
+    return orient_towards(P, N, cams[j])

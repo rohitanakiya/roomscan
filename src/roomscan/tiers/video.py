@@ -309,6 +309,10 @@ def build_scene(video, work: Path, fps=10.0, depth_every=3, depth_source=None, l
     pcd = o3d.geometry.PointCloud(o3d.utility.Vector3dVector(np.concatenate(pts))).voxel_down_sample(0.03)
     pcd, _ = pcd.remove_statistical_outlier(20, 2.0)
     pcd.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=0.12, max_nn=30))
+    from ..geometry.fusion import orient_to_nearest
+
+    _cams = np.array([v[0] for v in views])
+    pcd.normals = o3d.utility.Vector3dVector(orient_to_nearest(np.asarray(pcd.points), np.asarray(pcd.normals).copy(), _cams))
     path_len = float(np.linalg.norm(np.diff(poses[:, :3, 3], axis=0), axis=1).sum())
     images = [(i, str(files[i]), K, poses[i]) for i in kf]
     return Scene(tier="video", xyz=np.asarray(pcd.points), normals=np.asarray(pcd.normals),

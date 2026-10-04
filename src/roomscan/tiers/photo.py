@@ -169,6 +169,10 @@ def build_scene(root, work: Path, depth_source=None, log=print) -> Scene:
     pcd = o3d.geometry.PointCloud(o3d.utility.Vector3dVector(np.concatenate(allp))).voxel_down_sample(0.03)
     pcd, _ = pcd.remove_statistical_outlier(20, 2.0)
     pcd.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=0.12, max_nn=30))
+    from ..geometry.fusion import orient_to_nearest
+
+    _cams = np.array([v[0] for v in views])
+    pcd.normals = o3d.utility.Vector3dVector(orient_to_nearest(np.asarray(pcd.points), np.asarray(pcd.normals).copy(), _cams))
     groups = []
     for ri, (rname, _) in enumerate(folders):
         idx = [order.index(i) for i in range(n) if room_of[i] == ri and i in order]

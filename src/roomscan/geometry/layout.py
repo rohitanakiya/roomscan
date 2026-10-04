@@ -28,6 +28,8 @@ class LayoutParams:
     min_wall_support: float = 0.35    # fraction of room boundary that must touch walls
     max_depth: float = 5.0
     snap_window: float = 0.15         # m search either side of the raster edge
+    snap_outward: float = 0.50        # m beyond the raster edge searched for the room-side wall face
+    wall_floor_reach: float = 0.45    # m: a wall face's lowest 5% of points start below this height
     min_edge: float = 0.25            # m, shorter rectilinear jogs are merged away
     grow_to_walls: float = 0.10
     cell_geometry: bool = True        # snap room geometry to the wall-line arrangement
@@ -233,25 +235,28 @@ def snap_edge(orient, c0, a, b, inward_sign, q, nq, P: LayoutParams) -> WallFit:
 
     orient H: edge at v=c0 spanning u in [a,b]; normal axis = v.
     inward_sign: +1 if the room interior is at larger coordinate.
-    Search runs from slightly inside the raster edge outwards; the *first* strong face met is
-    the room-side face (the raster edge sits at or inside it). Taking the first face rather
-    than the strongest one is what stops an edge jumping across a wall to the neighbour's face.
+    Candidates are surface layers whose (camera-oriented) normals face *into this room*, from
+    slightly inside the raster edge to `P.snap_outward` beyond it. The chosen face is the
+    *outermost* layer that is strong and reaches down to the floor: a desk or shelf front stands
+    proud of the wall and stops short of the floor; the wall behind it does not. Faces of the
+    neighbouring room point away from this room and are never candidates.
     """
     ax_n, ax_t = (1, 0) if orient == "H" else (0, 1)
     lo, hi = min(a, b) + 0.10, max(a, b) - 0.10
     if hi <= lo:
         lo, hi = min(a, b), max(a, b)
     out = -inward_sign
-    near_in, far_out = 0.08, P.snap_window + 0.20
+    near_in, far_out = 0.08, P.snap_outward
     s_lo = min(c0 + out * far_out, c0 - out * near_in)
     s_hi = max(c0 + out * far_out, c0 - out * near_in)
     sel = (
-        (np.abs(nq[:, ax_n]) > 0.8)
+        (nq[:, ax_n] * inward_sign > 0.8)          # faces into this room
         & (q[:, ax_t] > lo) & (q[:, ax_t] < hi)
         & (q[:, ax_n] > s_lo) & (q[:, ax_n] < s_hi)
-        & (q[:, 2] > 0.1) & (q[:, 2] < 2.4)
+        & (q[:, 2] > 0.03) & (q[:, 2] < 2.6)
     )
     x = q[sel, ax_n]
+    hgt = q[sel, 2]
     if len(x) < 30:
         return WallFit(orient, c0, 0.03, np.nan, int(len(x)), c0, False)
     e = np.arange(s_lo, s_hi + 0.01, 0.01)
@@ -261,9 +266,15 @@ def snap_edge(orient, c0, a, b, inward_sign, q, nq, P: LayoutParams) -> WallFit:
     cand = [i for i in range(1, len(hs) - 1) if hs[i] >= thr and hs[i] >= hs[i - 1] and hs[i] >= hs[i + 1]]
     if not cand:
         return WallFit(orient, c0, 0.03, np.nan, int(len(x)), c0, False)
-    centres = [0.5 * (e[i] + e[i + 1]) for i in cand]
-    # first face going outward from the interior
-    first = min(centres, key=lambda c: (c - c0) * out)
+    centres = []
+    for i in cand:
+        c = 0.5 * (e[i] + e[i + 1])
+        m = np.abs(x - c) < 0.02
+        floor_reach = np.percentile(hgt[m], 5) if m.sum() > 10 else 9.0
+        centres.append((c, floor_reach))
+    full = [c for c, fr in centres if fr < P.wall_floor_reach]
+    pool = full or [c for c, _ in centres]
+    first = max(pool, key=lambda c: (c - c0) * out)     # outermost qualifying face
     best = (first, 0)
     v = x[np.abs(x - best[0]) < 0.03]
     for _ in range(3):
