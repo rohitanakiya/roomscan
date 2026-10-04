@@ -98,17 +98,27 @@ def lidar_views(scene, work: Path, max_views=96, width=640):
     kf = np.asarray(scene.meta["kf"])
     poses = scene.meta["poses"]
     sel = kf[np.linspace(0, len(kf) - 1, min(max_views, len(kf))).astype(int)]
+    # video frame n = pose row - off; rows with no video frame (n < 0 or beyond the end) are skipped, and
+    # duplicates removed, so the k-th extracted image is guaranteed to be the k-th requested frame
+    n_frames = len(cap.frame_ids) - off
+    sel = np.array(sorted({int(i) for i in sel if 0 <= int(cap.frame_ids[i]) - off < n_frames},
+                          key=lambda i: cap.frame_ids[i]))
     work.mkdir(parents=True, exist_ok=True)
     need = [i for i in sel if not (work / f"{int(cap.frame_ids[i]):06d}.jpg").exists()]
     if need:
         expr = "+".join(f"eq(n\\,{int(cap.frame_ids[i]) - off})" for i in need)
         tmp = work / "_tmp"
+        if tmp.exists():
+            for f in tmp.glob("*"):
+                f.unlink()
         tmp.mkdir(exist_ok=True)
         subprocess.check_call(["ffmpeg", "-v", "error", "-i", str(Path(scene.meta["capture"]) / "rgb.mp4"),
                                "-vf", f"select='{expr}',scale={width}:-2", "-vsync", "0", "-q:v", "2",
                                str(tmp / "%05d.jpg")])
         outs = sorted(tmp.glob("*.jpg"))
-        for i, f in zip(sorted(need, key=lambda i: cap.frame_ids[i]), outs):
+        if len(outs) != len(need):   # never pair an image with the wrong pose
+            raise RuntimeError(f"frame extraction returned {len(outs)} images for {len(need)} requested frames")
+        for i, f in zip(need, outs):
             f.rename(work / f"{int(cap.frame_ids[i]):06d}.jpg")
     s = width / 1920.0
     K = cap.K_rgb.copy()

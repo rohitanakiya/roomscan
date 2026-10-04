@@ -129,3 +129,10 @@ max deviation from the best-fit line (cracks wander ≥ 1.2 cm); (3) stain area 
 hysteresis growth into the diffuse halo (area error 54% → 7%). Result: recall 2/2 (stain area +7%, inside its
 interval, CD-02 fires; crack length −17%), 1 false positive on the staged capture. The bathroom staging is kept
 in data/staged/single_room_staged_bathroom as a documented failure case (glass/mirror).
+
+## D20. Never pair an image with the wrong pose
+Damage views are extracted with one ffmpeg `select` call and paired with poses by order. Keyframe 0 maps to video
+frame −1 (the encoder drops the first frame), so ffmpeg returned one image fewer than requested and every image
+after it was paired with the previous keyframe's pose — a one-frame shift that blurred thin features (the staged
+crack disappeared from the orthomosaic). Frames without a video frame are now dropped up front and the
+extraction count is asserted. Same guard added to tier-input derivation. Staged damage: recall 2/2.

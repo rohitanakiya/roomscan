@@ -187,7 +187,7 @@ def detect_ortho(lab_mean, valid, res):
         if len(xs) < 10:
             continue
         length = np.hypot(np.ptp(xs) + 1, np.ptp(ys) + 1) * res
-        if length < 0.15 or m.sum() * res * res / max(length, 1e-6) > 0.02:   # mean width > 20 mm: not a crack
+        if length < 0.15 or m.sum() * res * res / max(length, 1e-6) > 0.03:   # mean ridge width > 30 mm: not a crack
             continue
         P2 = np.c_[xs, ys].astype(float)
         c = np.cov(P2.T)

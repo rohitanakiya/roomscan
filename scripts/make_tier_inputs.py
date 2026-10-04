@@ -119,7 +119,8 @@ def main(capture, lidar_result, out_root, max_per_room=8):
             cosang = np.einsum("ni,ni->n", to, fwd_uv[inside]) / np.maximum(dist * np.linalg.norm(fwd_uv[inside], axis=1), 1e-9)
             score = cosang - 0.2 * np.abs(dist - 1.5)
             chosen.append(inside[np.argmax(score)])
-        picks[f"room_{k}"] = sorted(set(int(i) for i in chosen))[:max_per_room]
+        n_frames = len(cap.frame_ids) - off
+        picks[f"room_{k}"] = sorted(set(int(i) for i in chosen if 0 <= int(cap.frame_ids[i]) - off < n_frames))[:max_per_room]
     pdir = out_root / "photos" / name
     manifest = {}
     for folder, idxs in picks.items():
@@ -130,7 +131,9 @@ def main(capture, lidar_result, out_root, max_per_room=8):
         tmp.mkdir(exist_ok=True)
         subprocess.check_call(["ffmpeg", "-v", "error", "-y", "-i", str(capture / "rgb.mp4"), "-vf", f"select='{expr}'",
                                "-vsync", "0", "-q:v", "2", str(tmp / "%03d.jpg")])
-        for j, (i, f) in enumerate(zip(idxs, sorted(tmp.glob("*.jpg")))):
+        outs = sorted(tmp.glob("*.jpg"))
+        assert len(outs) == len(idxs), "frame extraction count mismatch"
+        for j, (i, f) in enumerate(zip(idxs, outs)):
             img = rotate_img(cv2.imread(str(f)), deg)
             cv2.imwrite(str(d / f"IMG_{j + 1:04d}.jpg"), img, [cv2.IMWRITE_JPEG_QUALITY, 92])
             f.unlink()
