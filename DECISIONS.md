@@ -52,3 +52,20 @@ known for a plain video: a Manhattan vanishing-point estimate gave 536 px vs the
 The ceiling-aimed capture sees little below 2.4 m; excluding ceiling points from the visibility
 fans starved free space and dropped the corridor. A ray to a ceiling point still crossed free
 plan space, so all returns up to 4 m now count.
+
+## D9. RGB/depth frame offset is estimated, not assumed
+Stray's rgb.mp4 decodes to N-1 frames; video frame n shows the scene of depth row n+1.
+Detected by RGB-edge / depth-discontinuity overlap (score 0.80 at +1 vs 0.48 at 0). Before the
+fix, reprojection error between frames was 18–32 px and damage masks landed on wrong surfaces.
+
+## D10. Damage detection on surface orthomosaics, not on images
+Per-image detection + multi-view voting: 89 false positives on a clean apartment (skirting,
+tile grout, shadows). Detecting on a per-surface orthomosaic (median of the 15 most frontal
+views, 1 cm grid) makes the background surface-local and metric, and excludes skirting / cornice
+/ corner bands and floors. Clean capture: 89 -> 3 detections. Staged-damage recall is the open
+problem: the staged stain sits behind a glass shower screen, where the orthomosaic is dominated
+by reflections. Known failure mode, reported.
+
+## D11. Digitally staged damage (sample-data substitute)
+No physical access → damage is painted on the 3D wall plane and re-rendered into every frame
+through the capture's own poses/intrinsics with LiDAR occlusion testing; truth is exact.

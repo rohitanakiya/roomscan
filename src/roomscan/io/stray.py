@@ -124,3 +124,38 @@ def load_stray(root: str | Path) -> StrayCapture:
 def is_stray_capture(root: str | Path) -> bool:
     root = Path(root)
     return (root / "odometry.csv").exists() and (root / "camera_matrix.csv").exists()
+
+
+def estimate_rgb_offset(cap: StrayCapture, n_samples=6, search=6) -> int:
+    """Video frame n shows the scene of depth/odometry row n + offset.
+
+    Found by maximising overlap between RGB edges and depth discontinuities. On the sample
+    captures the encoder drops the first frame, so the answer is +1; a wrong offset showed up
+    as 18-32 px reprojection error at 1920 px and as damage masks landing on the wrong surface.
+    """
+    import subprocess
+    import tempfile
+
+    import cv2
+
+    N = len(cap.frame_ids)
+    ns = np.linspace(N * 0.15, N * 0.85, n_samples).astype(int)
+    expr = "+".join(f"eq(n\\,{n})" for n in ns)
+    with tempfile.TemporaryDirectory() as td:
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(cap.root / "rgb.mp4"), "-vf",
+                        f"select='{expr}',scale={DEPTH_W}:{DEPTH_H}", "-vsync", "0", f"{td}/a_%02d.png"], check=True)
+        score = {o: 0.0 for o in range(-search, search + 1)}
+        for k, n in enumerate(ns):
+            g = cv2.imread(f"{td}/a_{k + 1:02d}.png", 0)
+            if g is None:
+                continue
+            ge = cv2.dilate(cv2.Canny(g, 30, 90), np.ones((3, 3), np.uint8)) > 0
+            for o in score:
+                if not 0 <= n + o < N:
+                    continue
+                d = cap.load_depth(int(cap.frame_ids[n + o]), min_conf=0)
+                if d is None:
+                    continue
+                dl = np.abs(cv2.Laplacian(d, cv2.CV_32F)) > 0.15
+                score[o] += (dl & ge).sum() / max(dl.sum(), 1)
+    return max(score, key=score.get)
