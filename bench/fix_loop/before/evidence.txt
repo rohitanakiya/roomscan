@@ -1,0 +1,6 @@
+floor_only~with_ceiling: registration score 0.378; footprint overlap/smaller 0.87; room IoUs [0.42, 0.46, 0.48, 0.3, 0.66]
+   wall faces matched 23: median |offset| 3.8 cm, within 1 cm 17%, within 2 cm 30%
+floor_only~single_room: registration score 0.360; footprint overlap/smaller 0.97; room IoUs [0.21, 0.74, 0.76]
+   wall faces matched 16: median |offset| 4.3 cm, within 1 cm 12%, within 2 cm 25%
+with_ceiling~single_room: registration score 0.276; footprint overlap/smaller 0.92; room IoUs [0.39, 0.46]
+   wall faces matched 10: median |offset| 4.8 cm, within 1 cm 10%, within 2 cm 10%

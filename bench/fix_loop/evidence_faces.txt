@@ -1,0 +1,25 @@
+R3-W0 length 2.836
+   layer    -2 cm outward: n= 3608, height 0.83-1.46 m
+   layer    +0 cm outward: n= 3330, height 0.85-1.44 m
+   layer    +4 cm outward: n= 1866, height 0.26-1.26 m
+   layer    +6 cm outward: n=  758, height 0.34-1.29 m
+R3-W1 length 3.125
+   layer    +0 cm outward: n= 4137, height 0.14-1.22 m
+   layer    -2 cm outward: n= 4085, height 0.29-1.28 m
+   layer    +4 cm outward: n= 3739, height 0.18-1.25 m
+   layer    +2 cm outward: n= 3251, height 0.26-1.30 m
+R3-W2 length 2.017
+   layer   +42 cm outward: n= 7047, height 0.08-1.36 m
+   layer   +28 cm outward: n= 5971, height 0.34-1.68 m
+   layer   +40 cm outward: n= 3792, height 0.10-1.18 m
+   layer    -2 cm outward: n= 1721, height 0.54-1.36 m
+R3-W4 length 0.819
+   layer    -2 cm outward: n= 2281, height 0.24-1.60 m
+   layer    +0 cm outward: n= 2107, height 0.12-1.38 m
+   layer   +68 cm outward: n= 1019, height 0.19-2.15 m
+   layer    +2 cm outward: n=  608, height 0.04-1.16 m
+R3-W5 length 2.763
+   layer    +4 cm outward: n= 3701, height 0.17-1.91 m
+   layer    +6 cm outward: n= 2705, height 0.16-2.10 m
+   layer    -2 cm outward: n= 2667, height 0.13-1.77 m
+   layer    +0 cm outward: n= 2471, height 0.14-1.77 m
