@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "roomscan"
+version = "0.1.0"
+description = "Phone capture (LiDAR / video / photos) -> dimensioned, stitched floor plan with damage scope"
+requires-python = ">=3.10"
+
+[project.scripts]
+roomscan = "roomscan.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+roomscan = ["calibration.json"]

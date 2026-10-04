@@ -7,7 +7,6 @@ scikit-image>=0.22
 matplotlib>=3.8
 pillow>=10
 jsonschema>=4
-# video / photo tiers (mono depth)
-torch>=2.2
-transformers>=4.45
-safetensors>=0.4
+# video / photo tiers additionally need (see README for the CPU-only torch command):
+#   torch>=2.2  transformers>=4.45
+-e .

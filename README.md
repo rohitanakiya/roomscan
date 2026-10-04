@@ -18,8 +18,10 @@ Requirements: Python 3.10–3.13, `ffmpeg` on PATH. ~1.5 GB disk for dependencie
 ```bash
 git clone <this repo> roomscan && cd roomscan
 python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
-pip install -r requirements.txt                          # ~3–6 min
-python scripts/fetch_weights.py                          # ~100 MB, video/photo tiers only
+pip install -r requirements.txt                          # ~2–4 min (LiDAR tier needs only this)
+# video/photo tiers: CPU PyTorch (~200 MB; avoids the 2.5 GB CUDA wheels on Linux/Windows)
+pip install torch --index-url https://download.pytorch.org/whl/cpu && pip install "transformers>=4.45"
+python scripts/fetch_weights.py                          # ~100 MB depth model
 ```
 
 Run a capture — the tier is auto-detected:
