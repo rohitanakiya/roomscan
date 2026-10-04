@@ -59,7 +59,7 @@ def property_to_json(prop, scene, extra=None):
                 id=wid, start=_r(w["start"]), end=_r(w["end"]), length=L.to_json(), height=H.to_json(),
                 face_observed=bool(w["fit"].observed),
                 face_rms_m=None if not np.isfinite(w["fit"].rms) else round(w["fit"].rms, 4),
-                face_points=int(w["fit"].n)))
+                face_points=int(w["fit"].n), face_ambiguity_m=round(float(w["fit"].ambiguity), 3)))
             surfaces.append(dict(id=f"S-{wid}", kind="wall", ref=wid, gross_area=area.to_json()))
         surfaces.append(dict(id=f"S-{r.id}-floor", kind="floor", ref=r.id, gross_area=r.floor_area.to_json()))
         surfaces.append(dict(id=f"S-{r.id}-ceiling", kind="ceiling", ref=r.id, gross_area=r.floor_area.to_json()))

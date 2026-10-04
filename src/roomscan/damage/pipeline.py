@@ -90,7 +90,7 @@ def _surface_normal_world(s, F):
     return np.array([nx, 0.0, nz])
 
 
-def lidar_views(scene, work: Path, max_views=60, width=960):
+def lidar_views(scene, work: Path, max_views=48, width=640):
     from ..io.stray import estimate_rgb_offset, load_stray
 
     cap = load_stray(scene.meta["capture"])

@@ -12,6 +12,21 @@ LIDAR_ERRORS = ErrorModel(sensor_face=0.004, scale_rel=0.003, drift_per_m=0.0004
                           ceiling_plane=0.004, unobserved_face=0.05, opening_jamb=0.006)
 
 
+def _load_calibration():
+    """Terms fitted by bench/calibrate.py on repeat captures (leave-one-pair-out validated)."""
+    import json
+    from pathlib import Path
+
+    p = Path(__file__).resolve().parents[1] / "calibration.json"
+    if p.exists():
+        c = json.load(open(p)).get("lidar", {})
+        LIDAR_ERRORS.ambiguity_k = c.get("ambiguity_k", LIDAR_ERRORS.ambiguity_k)
+        LIDAR_ERRORS.face_floor = c.get("face_floor", LIDAR_ERRORS.face_floor)
+
+
+_load_calibration()
+
+
 def build_scene(capture_dir, drift_correction=True, log=print) -> Scene:
     cap = load_stray(capture_dir)
     kf = select_keyframes(cap.poses, min_trans=0.10, min_rot_deg=8.0, max_gap=30)

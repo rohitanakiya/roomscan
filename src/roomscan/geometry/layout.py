@@ -228,6 +228,7 @@ class WallFit:
     n: int
     raster_coord: float
     observed: bool
+    ambiguity: float = 0.0   # m: spread of other strong room-facing layers within 0.15 m of the chosen face
 
 
 def snap_edge(orient, c0, a, b, inward_sign, q, nq, P: LayoutParams) -> WallFit:
@@ -276,6 +277,8 @@ def snap_edge(orient, c0, a, b, inward_sign, q, nq, P: LayoutParams) -> WallFit:
     pool = full or [c for c, _ in centres]
     first = max(pool, key=lambda c: (c - c0) * out)     # outermost qualifying face
     best = (first, 0)
+    near = [abs(c - first) for c, _ in centres if abs(c - first) <= 0.15]
+    ambiguity = float(max(near)) if near else 0.0
     v = x[np.abs(x - best[0]) < 0.03]
     for _ in range(3):
         med = np.median(v)
@@ -286,4 +289,4 @@ def snap_edge(orient, c0, a, b, inward_sign, q, nq, P: LayoutParams) -> WallFit:
     med = float(np.median(v))
     rms = float(v.std())
     sigma = float(1.2533 * rms / np.sqrt(len(v)))
-    return WallFit(orient, med, sigma, rms, int(len(v)), c0, True)
+    return WallFit(orient, med, sigma, rms, int(len(v)), c0, True, ambiguity)

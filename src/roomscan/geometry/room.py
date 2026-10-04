@@ -21,6 +21,8 @@ class ErrorModel:
     ceiling_plane: float = 0.004
     unobserved_face: float = 0.05     # m, face we could not fit (raster position only)
     opening_jamb: float = 0.006
+    ambiguity_k: float = 0.5          # sigma = k * (spread of competing face layers); calibrated in bench/calibrate.py
+    face_floor: float = 0.0           # m, per-face residual found by calibration (inter-capture repeatability)
 
 
 @dataclass
@@ -123,7 +125,9 @@ def build_room(label, mask, rasters, labels, q, nq, P: LayoutParams, E: ErrorMod
         sa = fa.sigma if fa.observed else E.unobserved_face
         sb = fb.sigma if fb.observed else E.unobserved_face
         length = combine(L, face_fit_a=sa, face_fit_b=sb, sensor=np.sqrt(2) * E.sensor_face,
-                         scale=E.scale_rel * L, drift=drift)
+                         scale=E.scale_rel * L, drift=drift,
+                         face_choice_a=E.ambiguity_k * fa.ambiguity, face_choice_b=E.ambiguity_k * fb.ambiguity,
+                         calibration=np.sqrt(2) * E.face_floor)
         if not (fa.observed and fb.observed):
             length.note = "one bounding wall not directly observed; raster position used"
         walls.append(dict(index=i, orient=fit.orient, coord=fit.coord, start=a, end=b, inward=inward,
@@ -133,7 +137,7 @@ def build_room(label, mask, rasters, labels, q, nq, P: LayoutParams, E: ErrorMod
     var_area = 0.0
     for i, w in enumerate(walls):
         s = w["fit"].sigma if w["fit"].observed else E.unobserved_face
-        s = np.hypot(s, E.sensor_face)
+        s = np.sqrt(s ** 2 + E.sensor_face ** 2 + (E.ambiguity_k * w["fit"].ambiguity) ** 2 + E.face_floor ** 2)
         var_area += (w["length"].value * s) ** 2
     perim = sum(w["length"].value for w in walls)
     floor_area = combine(area, unit="m2", wall_positions=np.sqrt(var_area), scale=2 * E.scale_rel * area,

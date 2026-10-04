@@ -92,3 +92,11 @@ depth on the video frames — a dev-only test of the odometry, not a reported nu
 13.9 m vs ARKit 14.5 m; main room area −3.9%.
 Also: the raw Stray video is VFR (avg 46 fps); a CFR re-encode duplicated 30% of frames and
 broke any index-based alignment — tier inputs now keep `-fps_mode passthrough`.
+
+## D15. Intervals calibrated to demonstrated repeatability (not to the sensor spec)
+With the face-fit + sensor + scale + drift budget alone, only 45–57% of repeat-capture wall differences fell
+inside the combined 95% intervals — confidently wrong. `bench/calibrate.py` fits a per-face residual term on
+wall pairs from repeat captures (gross mismatches > 30 cm — a different wall, not noise — excluded and reported),
+validated leave-one-pair-out: fitted face_floor = 6 cm, held-out coverage 100% / 80% / 89%. LiDAR wall intervals
+are therefore ±~17 cm (95%) — the repeatability we can demonstrate on this data, not the ±1–2 cm the sensor could
+deliver with better pose consistency.
