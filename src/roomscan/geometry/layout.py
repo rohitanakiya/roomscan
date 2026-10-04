@@ -29,7 +29,8 @@ class LayoutParams:
     max_depth: float = 5.0
     snap_window: float = 0.15         # m search either side of the raster edge
     min_edge: float = 0.25            # m, shorter rectilinear jogs are merged away
-    grow_to_walls: float = 0.10       # m, geodesic growth of room masks up to wall faces
+    grow_to_walls: float = 0.10
+    cell_geometry: bool = True        # snap room geometry to the wall-line arrangement       # m, geodesic growth of room masks up to wall faces
 
 
 @dataclass

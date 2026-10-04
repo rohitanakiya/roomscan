@@ -69,3 +69,16 @@ by reflections. Known failure mode, reported.
 ## D11. Digitally staged damage (sample-data substitute)
 No physical access → damage is painted on the 3D wall plane and re-rendered into every frame
 through the capture's own poses/intrinsics with LiDAR occlusion testing; truth is exact.
+
+## D12. Photo tier registration = top-view correlation in gravity+Manhattan frame
+SIFT+PnP linked 28 sample photos into 19 blocks; FPFH+RANSAC gave >0.5 m errors on 30/42
+pairs (white walls, repeated planes). With metric depth each photo yields gravity, Manhattan
+directions and a top-view structure map; the residual unknown (4 yaws × 2-D shift) is solved
+exhaustively by FFT correlation. Status: runs end-to-end and places every room, but with
+oracle (LiDAR) depth the single-room set still under-estimates room area by ~55% — single
+photos see too little of each room. Intervals for this tier are calibrated to that error.
+
+## D13. Hybrid room geometry
+Room identity from the watershed (door-width splitting); room geometry from the wall-line
+arrangement (cells snapped to fitted faces). Pure cell decomposition merged rooms through
+unobserved wall stretches (floor-only capture became one 61 m² room).

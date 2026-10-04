@@ -34,7 +34,19 @@ def analyze(scene, P: LayoutParams | None = None, log=print) -> Property:
         labels, stats = segment_by_groups(scene, F, R, P)
     else:
         labels, stats, _ = segment_rooms(R, P)
-    labels = grow_to_walls(labels, R.wall, R.grid.res, P.grow_to_walls)
+        labels = grow_to_walls(labels, R.wall, R.grid.res, P.grow_to_walls)
+        if P.cell_geometry:
+            from .geometry.cells import cells_from_labels
+
+            labels2, _ = cells_from_labels(q, nq, R, labels)
+            # keep a room only if the cell geometry kept most of it
+            keep = []
+            for s_ in stats:
+                a0 = (labels == s_["label"]).sum()
+                a1 = (labels2 == s_["label"]).sum()
+                if a1 > 0.5 * a0:
+                    keep.append(s_)
+            stats, labels = keep, labels2
     log(f"  layout: yaw {F.yaw_deg:.1f} deg, {len(stats)} room regions")
     rooms = []
     for s in stats:
@@ -66,7 +78,7 @@ def analyze(scene, P: LayoutParams | None = None, log=print) -> Property:
     from shapely.geometry import Polygon
     from shapely.ops import unary_union
 
-    polys = [Polygon(r.polygon) for r in rooms if len(r.polygon) >= 3]
+    polys = [Polygon(r.polygon).buffer(0) for r in rooms if len(r.polygon) >= 3]
     U = unary_union(polys) if polys else None
     fp_area = float(U.area) if U is not None else 0.0
     fp_sigma = float(np.sqrt(sum(r.floor_area.sigma ** 2 for r in rooms))) if rooms else 0.0

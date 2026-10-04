@@ -86,7 +86,13 @@ def property_to_json(prop, scene, extra=None):
             walls=walls_js, openings=ops_js, surfaces=surfaces,
             damage=r.meta.get("damage", []), concealed_damage_flags=r.meta.get("concealed", []),
             scope_items=r.meta.get("scope", [])))
-    meta = {k: v for k, v in scene.meta.items() if k not in ("poses", "kf", "K_rgb", "frame_ids", "frames_dir")}
+    def _serialisable(v):
+        try:
+            json.dumps(v)
+            return True
+        except (TypeError, ValueError):
+            return False
+    meta = {k: v for k, v in scene.meta.items() if _serialisable(v)}
     out = dict(
         schema=SCHEMA_ID,
         capture=dict(tier=scene.tier, **meta),
