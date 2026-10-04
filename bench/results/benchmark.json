@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-04 12:59:22",
+ "generated": "2026-10-04 13:20:17",
  "runs": {
   "lidar/single_room": {
    "rooms": 4,
@@ -27,10 +27,10 @@
     "max_correction_m": 0.0973
    },
    "timing": {
-    "reconstruct_s": 13.0,
+    "reconstruct_s": 12.8,
     "layout_s": 1.0,
-    "damage_s": 90.0,
-    "total_s": 104.2
+    "damage_s": 88.4,
+    "total_s": 102.4
    },
    "wall_sharpness": 0.6998,
    "room_overlap_m2": 0.7989
@@ -88,10 +88,10 @@
     "max_correction_m": 0.2431
    },
    "timing": {
-    "reconstruct_s": 78.5,
-    "layout_s": 6.3,
-    "damage_s": 173.2,
-    "total_s": 258.3
+    "reconstruct_s": 85.0,
+    "layout_s": 6.6,
+    "damage_s": 162.0,
+    "total_s": 253.9
    },
    "wall_sharpness": 0.489,
    "room_overlap_m2": 0.1389
@@ -117,8 +117,8 @@
    },
    "timing": {
     "reconstruct_s": 13.9,
-    "layout_s": 7.0,
-    "total_s": 21.1
+    "layout_s": 6.4,
+    "total_s": 20.6
    },
    "wall_sharpness": 0.5145,
    "room_overlap_m2": 0.8279
@@ -149,10 +149,10 @@
     "max_correction_m": 0.1464
    },
    "timing": {
-    "reconstruct_s": 312.7,
-    "layout_s": 12.0,
-    "damage_s": 258.2,
-    "total_s": 583.2
+    "reconstruct_s": 319.1,
+    "layout_s": 11.9,
+    "damage_s": 252.0,
+    "total_s": 583.3
    },
    "wall_sharpness": 0.4625,
    "room_overlap_m2": 0.0
@@ -177,9 +177,9 @@
     "enabled": false
    },
    "timing": {
-    "reconstruct_s": 29.3,
-    "layout_s": 12.6,
-    "total_s": 42.2
+    "reconstruct_s": 28.1,
+    "layout_s": 13.3,
+    "total_s": 41.7
    },
    "wall_sharpness": 0.3541,
    "room_overlap_m2": 0.0
@@ -187,10 +187,10 @@
  },
  "timing": {
   "lidar/single_room": {
-   "reconstruct_s": 13.0,
+   "reconstruct_s": 12.8,
    "layout_s": 1.0,
-   "damage_s": 90.0,
-   "total_s": 104.2
+   "damage_s": 88.4,
+   "total_s": 102.4
   },
   "lidar/single_room/no_drift": {
    "reconstruct_s": 4.2,
@@ -198,26 +198,26 @@
    "total_s": 5.5
   },
   "lidar/floor_only": {
-   "reconstruct_s": 78.5,
-   "layout_s": 6.3,
-   "damage_s": 173.2,
-   "total_s": 258.3
+   "reconstruct_s": 85.0,
+   "layout_s": 6.6,
+   "damage_s": 162.0,
+   "total_s": 253.9
   },
   "lidar/floor_only/no_drift": {
    "reconstruct_s": 13.9,
-   "layout_s": 7.0,
-   "total_s": 21.1
+   "layout_s": 6.4,
+   "total_s": 20.6
   },
   "lidar/with_ceiling": {
-   "reconstruct_s": 312.7,
-   "layout_s": 12.0,
-   "damage_s": 258.2,
-   "total_s": 583.2
+   "reconstruct_s": 319.1,
+   "layout_s": 11.9,
+   "damage_s": 252.0,
+   "total_s": 583.3
   },
   "lidar/with_ceiling/no_drift": {
-   "reconstruct_s": 29.3,
-   "layout_s": 12.6,
-   "total_s": 42.2
+   "reconstruct_s": 28.1,
+   "layout_s": 13.3,
+   "total_s": 41.7
   }
  },
  "comparisons": {
@@ -1925,14 +1925,14 @@
     "id": "GT1",
     "cls": "water_stain",
     "detected": true,
-    "localisation_err_m": 0.008,
+    "localisation_err_m": 0.019,
     "truth_area_m2": 0.1038,
-    "est_area_m2": 0.1107,
+    "est_area_m2": 0.1163,
     "ci95": [
-     0.0621,
-     0.1593
+     0.0623,
+     0.1703
     ],
-    "rel_err": 0.067,
+    "rel_err": 0.121,
     "in_ci": true,
     "concealed_rules": [
      "CD-02"
@@ -1945,10 +1945,10 @@
    }
   ],
   "recall": 0.5,
-  "false_positives": 1,
-  "detections": 2
+  "false_positives": 4,
+  "detections": 5
  },
- "damage_clean_false_positives": 0,
+ "damage_clean_false_positives": 4,
  "ceilings": [
   {
    "room": "R1",
