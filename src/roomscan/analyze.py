@@ -33,8 +33,15 @@ def analyze(scene, P: LayoutParams | None = None, log=print) -> Property:
         from .tiers.photo import segment_by_groups
         labels, stats = segment_by_groups(scene, F, R, P)
     else:
-        labels, stats, _ = segment_rooms(R, P)
-        labels = grow_to_walls(labels, R.wall, R.grid.res, P.grow_to_walls)
+        barrier = None
+        if P.door_closures:
+            from .geometry.cells import doorway_closures, extract_segments, rasterize_segments
+
+            closures = doorway_closures(extract_segments(q, nq))
+            barrier = rasterize_segments(closures, R.grid)
+            log(f"  doorway closures: {len(closures)}")
+        labels, stats, _ = segment_rooms(R, P, barrier=barrier)
+        labels = grow_to_walls(labels, R.wall if barrier is None else (R.wall | barrier), R.grid.res, P.grow_to_walls)
         if P.cell_geometry:
             from .geometry.cells import cells_from_labels
 

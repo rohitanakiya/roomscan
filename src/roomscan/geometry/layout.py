@@ -30,7 +30,8 @@ class LayoutParams:
     snap_window: float = 0.15         # m search either side of the raster edge
     min_edge: float = 0.25            # m, shorter rectilinear jogs are merged away
     grow_to_walls: float = 0.10
-    cell_geometry: bool = True        # snap room geometry to the wall-line arrangement       # m, geodesic growth of room masks up to wall faces
+    cell_geometry: bool = True        # snap room geometry to the wall-line arrangement
+    door_closures: bool = True        # close door-width gaps between collinear wall faces before splitting rooms       # m, geodesic growth of room masks up to wall faces
 
 
 @dataclass
@@ -98,9 +99,10 @@ def build_rasters(views, cam_centres, frame, q, nq, P: LayoutParams) -> Rasters:
     return Rasters(grid, free.astype(bool), wall, ext, grid.to_px(traj))
 
 
-def segment_rooms(R: Rasters, P: LayoutParams):
+def segment_rooms(R: Rasters, P: LayoutParams, barrier=None):
+    """barrier: optional extra blocking raster (virtual doorway closures) — segmentation only."""
     res = R.grid.res
-    W = R.wall
+    W = R.wall if barrier is None else (R.wall | barrier)
     I = R.free & ~(cv2.dilate(W.astype(np.uint8), disk(1)) > 0)
     I = fill_small_holes(I, int(2.0 / res**2))
     I = cv2.morphologyEx(I.astype(np.uint8), cv2.MORPH_OPEN, disk(2)) > 0

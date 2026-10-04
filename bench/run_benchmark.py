@@ -24,6 +24,7 @@ from compare import compare  # noqa: E402
 from eval_damage import evaluate as eval_damage  # noqa: E402
 
 CAPTURES = ["single_room", "floor_only", "with_ceiling"]
+RUNS = ROOT / "out" / "bench"
 DATA = ROOT / "data"
 
 
@@ -34,7 +35,8 @@ def run(cmd_args, out, force=False, log=print):
     t = time.time()
     cmd = [sys.executable, "-m", "roomscan"] + cmd_args + ["--out", str(out)]
     log("  $ " + " ".join(cmd))
-    p = subprocess.run(cmd, cwd=ROOT, env={**__import__("os").environ, "PYTHONPATH": str(ROOT / "src")},
+    src = __import__("os").environ.get("ROOMSCAN_SRC", str(ROOT / "src"))   # fix loop: run a tagged checkout
+    p = subprocess.run(cmd, cwd=ROOT, env={**__import__("os").environ, "PYTHONPATH": src},
                        capture_output=True, text=True)
     (Path(out)).mkdir(parents=True, exist_ok=True)
     (Path(out) / "log.txt").write_text(p.stdout + p.stderr)
@@ -75,7 +77,10 @@ def summarise_pair(cmp, wall_tol_abs=0.01, wall_tol_rel=0.005):
     )
 
 
-def main(force=False, outdir=ROOT / "bench" / "results", tiers=("lidar", "video", "photo")):
+def main(force=False, outdir=ROOT / "bench" / "results", tiers=("lidar", "video", "photo"), runs_dir=None,
+         damage=True):
+    global RUNS
+    RUNS = Path(runs_dir) if runs_dir else ROOT / "out" / "bench"
     outdir = Path(outdir)
     outdir.mkdir(parents=True, exist_ok=True)
     B = dict(generated=time.strftime("%Y-%m-%d %H:%M:%S"), runs={}, timing={}, comparisons={}, notes=[])
@@ -85,7 +90,9 @@ def main(force=False, outdir=ROOT / "bench" / "results", tiers=("lidar", "video"
         for drift in (True, False):
             key = f"lidar/{c}" + ("" if drift else "/no_drift")
             args = [str(DATA / "raw" / c), "--tier", "lidar"] + ([] if drift else ["--no-drift", "--no-damage"])
-            res, dt = run(args, ROOT / "out" / "bench" / key, force)
+            if not damage and "--no-damage" not in args:
+                args.append("--no-damage")
+            res, dt = run(args, RUNS / key, force)
             R[key] = res
             if res:
                 B["timing"][key] = res["pipeline"].get("timing")
@@ -96,9 +103,9 @@ def main(force=False, outdir=ROOT / "bench" / "results", tiers=("lidar", "video"
         v = DATA / "tiers" / "video" / f"{c}.mp4"
         p = DATA / "tiers" / "photos" / c
         if "video" in tiers and v.exists() and available():
-            R[f"video/{c}"], _ = run([str(v), "--tier", "video", "--no-damage"], ROOT / "out" / "bench" / f"video/{c}", force)
+            R[f"video/{c}"], _ = run([str(v), "--tier", "video", "--no-damage"], RUNS / f"video/{c}", force)
         if "photo" in tiers and p.exists() and available():
-            R[f"photo/{c}"], _ = run([str(p), "--tier", "photo", "--no-damage"], ROOT / "out" / "bench" / f"photo/{c}", force)
+            R[f"photo/{c}"], _ = run([str(p), "--tier", "photo", "--no-damage"], RUNS / f"photo/{c}", force)
     if not available():
         B["notes"].append("depth weights not present: video and photo tiers not run")
     for k, v in R.items():
@@ -121,8 +128,8 @@ def main(force=False, outdir=ROOT / "bench" / "results", tiers=("lidar", "video"
                 B["comparisons"][f"{t}_vs_lidar:{c}"] = summarise_pair(compare(R[f"lidar/{c}"], R[f"{t}/{c}"]))
     # 5. staged damage
     st = DATA / "staged" / "single_room_staged"
-    if st.exists():
-        res, _ = run([str(st), "--tier", "lidar"], ROOT / "out" / "bench" / "lidar/single_room_staged", force)
+    if st.exists() and damage:
+        res, _ = run([str(st), "--tier", "lidar"], RUNS / "lidar/single_room_staged", force)
         if res:
             B["damage_staged"] = eval_damage(res, json.load(open(st / "staged_truth.json")))
     if R.get("lidar/single_room"):
@@ -179,5 +186,8 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--out", default=str(ROOT / "bench" / "results"))
+    ap.add_argument("--runs", default=None, help="where per-capture outputs go (default out/bench)")
+    ap.add_argument("--no-damage", action="store_true", help="geometry only (fix-loop runs)")
+    ap.add_argument("--tiers", default="lidar,video,photo")
     a = ap.parse_args()
-    main(a.force, a.out)
+    main(a.force, a.out, tuple(a.tiers.split(",")), a.runs, not a.no_damage)

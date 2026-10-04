@@ -274,3 +274,44 @@ def cells_from_labels(q, nq, rasters, labels, free_thr=0.45, min_cover=0.3):
             if cnt[k] >= min_cover * blk.size and fr > free_thr:
                 out[r0:r1, c0:c1] = k
     return out, segs
+
+
+def doorway_closures(segs, min_gap=0.55, max_gap=1.25, min_seg=0.25, tol=0.03):
+    """Gaps of door width between collinear wall-face segments (jambs on both sides).
+
+    Returned as virtual wall segments used *only* for room segmentation, so a doorway splits rooms
+    regardless of how much free space a particular capture observed around it.
+    """
+    out = []
+    for orient in ("H", "V"):
+        S = sorted([s for s in segs if s.orient == orient], key=lambda s: s.coord)
+        groups, cur = [], []
+        for s in S:
+            if cur and abs(s.coord - np.mean([c.coord for c in cur])) > tol:
+                groups.append(cur)
+                cur = []
+            cur.append(s)
+        if cur:
+            groups.append(cur)
+        for g in groups:
+            g = sorted(g, key=lambda s: s.t0)
+            for a, b in zip(g, g[1:]):
+                gap = b.t0 - a.t1
+                if min_gap <= gap <= max_gap and (a.t1 - a.t0) >= min_seg and (b.t1 - b.t0) >= min_seg:
+                    c = float(np.mean([a.coord, b.coord]))
+                    out.append(Segment(orient, c, a.t1, b.t0, 0))
+    return out
+
+
+def rasterize_segments(segs, grid, thickness_px=2):
+    import cv2
+
+    img = np.zeros(grid.shape, np.uint8)
+    for s in segs:
+        if s.orient == "H":
+            p0, p1 = np.array([s.t0, s.coord]), np.array([s.t1, s.coord])
+        else:
+            p0, p1 = np.array([s.coord, s.t0]), np.array([s.coord, s.t1])
+        a, b = grid.to_px(p0[None])[0], grid.to_px(p1[None])[0]
+        cv2.line(img, (int(a[0]), int(a[1])), (int(b[0]), int(b[1])), 1, thickness_px)
+    return img.astype(bool)
