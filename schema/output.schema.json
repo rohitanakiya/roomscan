@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "roomscan.output/1.0",
+  "title": "roomscan capture result",
+  "description": "One file per capture. Every measurement is a Measure with a 95% interval. Units: metres, square metres. Plan coordinates are a gravity-aligned, Manhattan-aligned 2-D frame (u, v) in metres; heights are above the floor plane.",
+  "type": "object",
+  "required": ["schema", "capture", "pipeline", "units", "plan_frame", "property", "rooms", "warnings"],
+  "$defs": {
+    "measure": {
+      "type": "object",
+      "required": ["value", "ci95", "sigma", "unit", "observed"],
+      "properties": {
+        "value": {"type": ["number", "null"]},
+        "ci95": {"type": "array", "items": {"type": ["number", "null"]}, "minItems": 2, "maxItems": 2},
+        "sigma": {"type": ["number", "null"], "description": "1-sigma total uncertainty"},
+        "unit": {"enum": ["m", "m2"]},
+        "observed": {"type": "boolean", "description": "false = not directly observed; value is a prior/bound"},
+        "error_budget_1sigma": {"type": "object", "additionalProperties": {"type": ["number", "null"]}},
+        "note": {"type": "string"}
+      }
+    },
+    "point2": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2},
+    "wall": {
+      "type": "object",
+      "required": ["id", "start", "end", "length", "height", "face_observed"],
+      "properties": {
+        "id": {"type": "string"},
+        "start": {"$ref": "#/$defs/point2"},
+        "end": {"$ref": "#/$defs/point2"},
+        "length": {"$ref": "#/$defs/measure"},
+        "height": {"$ref": "#/$defs/measure"},
+        "face_observed": {"type": "boolean"},
+        "face_rms_m": {"type": ["number", "null"]},
+        "face_points": {"type": "integer"}
+      }
+    },
+    "opening": {
+      "type": "object",
+      "required": ["id", "type", "wall_id", "width", "height", "offset_from_wall_start_m", "connects_to"],
+      "properties": {
+        "id": {"type": "string"},
+        "type": {"enum": ["door", "window", "passage"]},
+        "wall_id": {"type": "string"},
+        "width": {"$ref": "#/$defs/measure"},
+        "height": {"$ref": "#/$defs/measure"},
+        "sill_height": {"type": ["number", "null"]},
+        "offset_from_wall_start_m": {"type": "number"},
+        "connects_to": {"type": "string"},
+        "see_through_fraction": {"type": "number"}
+      }
+    },
+    "surface": {
+      "type": "object",
+      "required": ["id", "kind", "ref", "gross_area"],
+      "properties": {
+        "id": {"type": "string"},
+        "kind": {"enum": ["wall", "floor", "ceiling"]},
+        "ref": {"type": "string"},
+        "gross_area": {"$ref": "#/$defs/measure"}
+      }
+    },
+    "damage": {
+      "type": "object",
+      "required": ["id", "surface_id", "class", "area", "bbox", "plan_xy", "views", "confidence"],
+      "properties": {
+        "id": {"type": "string"},
+        "surface_id": {"type": "string"},
+        "class": {"enum": ["water_stain", "crack", "mould"]},
+        "area": {"$ref": "#/$defs/measure"},
+        "length_m": {"type": "number"},
+        "bbox": {"type": "object"},
+        "plan_xy": {"$ref": "#/$defs/point2"},
+        "views": {"type": "integer"},
+        "confidence": {"type": "number"}
+      }
+    },
+    "flag": {
+      "type": "object",
+      "required": ["rule_id", "rule", "surface_id", "damage_id", "evidence"],
+      "properties": {
+        "rule_id": {"type": "string"}, "rule": {"type": "string"}, "surface_id": {"type": "string"},
+        "damage_id": {"type": "string"}, "evidence": {"type": "string"}
+      }
+    },
+    "scope": {
+      "type": "object",
+      "required": ["code", "description", "surface_id", "quantity", "unit"],
+      "properties": {
+        "code": {"type": "string"}, "description": {"type": "string"}, "surface_id": {"type": "string"},
+        "quantity": {"type": "number"}, "unit": {"enum": ["m2", "lm", "EA"]}, "reason": {"type": "string"}
+      }
+    }
+  },
+  "properties": {
+    "schema": {"const": "roomscan.output/1.0"},
+    "capture": {"type": "object", "required": ["tier"], "properties": {"tier": {"enum": ["lidar", "video", "photo"]}}},
+    "pipeline": {"type": "object", "required": ["version", "git"]},
+    "units": {"type": "object"},
+    "plan_frame": {"type": "object", "required": ["yaw_deg", "floor_world_y"]},
+    "property": {
+      "type": "object",
+      "required": ["footprint_area", "rooms_count", "room_overlap_m2", "adjacency"],
+      "properties": {
+        "footprint_area": {"$ref": "#/$defs/measure"},
+        "rooms_count": {"type": "integer"},
+        "room_overlap_m2": {"type": "number"},
+        "adjacency": {"type": "array", "items": {"type": "object", "required": ["rooms", "via"]}},
+        "drift": {"type": ["object", "null"]}
+      }
+    },
+    "rooms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "polygon", "floor_area", "perimeter", "ceiling_height", "walls", "openings",
+                     "surfaces", "damage", "concealed_damage_flags", "scope_items"],
+        "properties": {
+          "id": {"type": "string"},
+          "name": {"type": "string"},
+          "primary": {"type": "boolean"},
+          "polygon": {"type": "array", "items": {"$ref": "#/$defs/point2"}},
+          "floor_area": {"$ref": "#/$defs/measure"},
+          "perimeter": {"$ref": "#/$defs/measure"},
+          "ceiling_height": {"$ref": "#/$defs/measure"},
+          "walls": {"type": "array", "items": {"$ref": "#/$defs/wall"}},
+          "openings": {"type": "array", "items": {"$ref": "#/$defs/opening"}},
+          "surfaces": {"type": "array", "items": {"$ref": "#/$defs/surface"}},
+          "damage": {"type": "array", "items": {"$ref": "#/$defs/damage"}},
+          "concealed_damage_flags": {"type": "array", "items": {"$ref": "#/$defs/flag"}},
+          "scope_items": {"type": "array", "items": {"$ref": "#/$defs/scope"}}
+        }
+      }
+    },
+    "warnings": {"type": "array", "items": {"type": "string"}}
+  }
+}
