@@ -13,7 +13,8 @@ Output per capture (`out/<name>/`): `result.json` (schema: `schema/output.schema
 
 ## Quick start (clean machine, < 15 min)
 
-Requirements: Python 3.10–3.12 (open3d has no 3.13+ wheels on Windows), `ffmpeg` on PATH. ~1.5 GB disk for dependencies.
+Requirements: Python 3.10–3.12 (open3d has no 3.13+ wheels on Windows). ffmpeg is used from PATH if present, otherwise
+the copy bundled by the `imageio-ffmpeg` wheel in `requirements.txt` — nothing else to install. ~1.5 GB disk for dependencies.
 
 ```bash
 git clone <this repo> roomscan && cd roomscan

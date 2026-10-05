@@ -198,3 +198,10 @@ Now there is one cache per checkout (`out/.cache/depth`, the cached outputs repl
 on a pinned thread count (`ROOMSCAN_TORCH_THREADS`, default 2). All thin-tier numbers were recomputed from an empty
 cache on one host. The photo stitch's sensitivity to perturbations this small is reported as a limitation.
 
+
+## D26. The clean-machine test found a missing dependency
+Running the README on the Windows laptop: `ffmpeg: command not found`. The README said "ffmpeg on PATH", which a
+reviewer would have had to go and install. Every ffmpeg call now goes through `roomscan.ffmpeg_bin.ffmpeg_exe()`:
+the system ffmpeg if there is one, else the static build from the `imageio-ffmpeg` wheel (added to
+requirements). A dead `ffprobe` helper was removed (ffmpeg auto-rotates on decode), so no ffprobe is needed.
+Checked: the LiDAR single_room run with only the bundled ffmpeg reproduces the benchmark (23.118 m², 2 damage regions).

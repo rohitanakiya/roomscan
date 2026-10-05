@@ -18,6 +18,7 @@ from scipy import ndimage as ndi
 from ..measure import combine
 from .detect import detect_ortho
 from .rules import concealed_flags, scope_items
+from ..ffmpeg_bin import ffmpeg_exe
 
 CACHE_VERSION = 2   # bump whenever frame selection/extraction changes
 
@@ -126,7 +127,7 @@ def lidar_views(scene, work: Path, max_views=96, width=640):
             for f in tmp.glob("*"):
                 f.unlink()
         tmp.mkdir(exist_ok=True)
-        subprocess.check_call(["ffmpeg", "-v", "error", "-i", str(Path(scene.meta["capture"]) / "rgb.mp4"),
+        subprocess.check_call([ffmpeg_exe(), "-v", "error", "-i", str(Path(scene.meta["capture"]) / "rgb.mp4"),
                                "-vf", f"select='{expr}',scale={width}:-2", "-vsync", "0", "-q:v", "2",
                                str(tmp / "%05d.jpg")])
         outs = sorted(tmp.glob("*.jpg"))

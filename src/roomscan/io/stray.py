@@ -22,6 +22,8 @@ from pathlib import Path
 import numpy as np
 from scipy.spatial.transform import Rotation
 
+from ..ffmpeg_bin import ffmpeg_exe
+
 # ARKit camera axes -> OpenCV camera axes
 _ARKIT_TO_CV = np.eye(3)  # Stray already stores OpenCV-convention camera axes (verified empirically, see DECISIONS.md)
 
@@ -142,7 +144,7 @@ def estimate_rgb_offset(cap: StrayCapture, n_samples=6, search=6) -> int:
     ns = np.linspace(N * 0.15, N * 0.85, n_samples).astype(int)
     expr = "+".join(f"eq(n\\,{n})" for n in ns)
     with tempfile.TemporaryDirectory() as td:
-        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(cap.root / "rgb.mp4"), "-vf",
+        subprocess.run([ffmpeg_exe(), "-v", "error", "-y", "-i", str(cap.root / "rgb.mp4"), "-vf",
                         f"select='{expr}',scale={DEPTH_W}:{DEPTH_H}", "-vsync", "0", f"{td}/a_%02d.png"], check=True)
         score = {o: 0.0 for o in range(-search, search + 1)}
         for k, n in enumerate(ns):

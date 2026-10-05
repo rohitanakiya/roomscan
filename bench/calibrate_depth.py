@@ -28,6 +28,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from make_tier_inputs import rotate_img  # noqa: E402
 from roomscan.io.stray import load_stray  # noqa: E402
 from roomscan.models.depth import MonoDepth, default_cache_dir  # noqa: E402
+from roomscan.ffmpeg_bin import ffmpeg_exe  # noqa: E402
 
 CAPTURES = ["single_room", "floor_only", "with_ceiling"]
 N_FRAMES = 30
@@ -42,7 +43,7 @@ def capture_ratio(name, model):
     ns = np.linspace(5, n_video - 5, N_FRAMES).astype(int)
     with tempfile.TemporaryDirectory() as td:
         expr = "+".join(f"eq(n\\,{n})" for n in ns)
-        subprocess.check_call(["ffmpeg", "-v", "error", "-i", str(vid), "-vf", f"select='{expr}'", "-vsync", "0",
+        subprocess.check_call([ffmpeg_exe(), "-v", "error", "-i", str(vid), "-vf", f"select='{expr}'", "-vsync", "0",
                                "-q:v", "2", f"{td}/%03d.jpg"])
         files = sorted(Path(td).glob("*.jpg"))
         assert len(files) == len(ns), "frame extraction count mismatch"

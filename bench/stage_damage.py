@@ -23,6 +23,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from roomscan.analyze import analyze  # noqa: E402
 from roomscan.io.stray import estimate_rgb_offset, load_stray  # noqa: E402
 from roomscan.tiers.lidar import build_scene  # noqa: E402
+from roomscan.ffmpeg_bin import ffmpeg_exe  # noqa: E402
 
 PX = 0.004  # texture resolution on the wall (m / px)
 
@@ -117,9 +118,9 @@ def main(src, dst, room_id=None, truth_only=False):
             os.symlink((src / name).resolve(), t)
     K = cap.K_rgb
     w, h = 1920, 1440
-    reader = subprocess.Popen(["ffmpeg", "-v", "error", "-i", str(src / "rgb.mp4"), "-vsync", "0", "-f", "rawvideo", "-pix_fmt",
+    reader = subprocess.Popen([ffmpeg_exe(), "-v", "error", "-i", str(src / "rgb.mp4"), "-vsync", "0", "-f", "rawvideo", "-pix_fmt",
                                "bgr24", "-"], stdout=subprocess.PIPE)
-    writer = subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "bgr24", "-s", f"{w}x{h}",
+    writer = subprocess.Popen([ffmpeg_exe(), "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "bgr24", "-s", f"{w}x{h}",
                                "-r", "60", "-i", "-", "-c:v", "libx264", "-crf", "18", "-preset", "veryfast",
                                "-pix_fmt", "yuv420p", str(dst / "rgb.mp4")], stdin=subprocess.PIPE)
     n = 0

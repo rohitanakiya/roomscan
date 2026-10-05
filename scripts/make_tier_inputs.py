@@ -27,6 +27,7 @@ from matplotlib.path import Path as MplPath
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from roomscan.io.stray import estimate_rgb_offset, load_stray  # noqa: E402
+from roomscan.ffmpeg_bin import ffmpeg_exe  # noqa: E402
 
 ROT = {0: None, 90: "transpose=2", 180: "hflip,vflip", 270: "transpose=1"}
 
@@ -68,7 +69,7 @@ def main(capture, lidar_result, out_root, max_per_room=8):
     if not vout.exists():
         vf = ROT[deg]
         # passthrough keeps the original (variable) frame timing; a CFR re-encode duplicated 30% of frames
-        cmd = ["ffmpeg", "-v", "error", "-y", "-i", str(capture / "rgb.mp4"), "-map_metadata", "-1",
+        cmd = [ffmpeg_exe(), "-v", "error", "-y", "-i", str(capture / "rgb.mp4"), "-map_metadata", "-1",
                "-fps_mode", "passthrough"]
         if vf:
             cmd += ["-vf", vf]
@@ -129,7 +130,7 @@ def main(capture, lidar_result, out_root, max_per_room=8):
         expr = "+".join(f"eq(n\\,{int(cap.frame_ids[i]) - off})" for i in idxs)
         tmp = d / "_tmp"
         tmp.mkdir(exist_ok=True)
-        subprocess.check_call(["ffmpeg", "-v", "error", "-y", "-i", str(capture / "rgb.mp4"), "-vf", f"select='{expr}'",
+        subprocess.check_call([ffmpeg_exe(), "-v", "error", "-y", "-i", str(capture / "rgb.mp4"), "-vf", f"select='{expr}'",
                                "-vsync", "0", "-q:v", "2", str(tmp / "%03d.jpg")])
         outs = sorted(tmp.glob("*.jpg"))
         assert len(outs) == len(idxs), "frame extraction count mismatch"

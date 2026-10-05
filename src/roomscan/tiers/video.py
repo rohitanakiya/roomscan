@@ -14,13 +14,14 @@ registered and the model split in three (low-texture walls) — see DECISIONS.md
 """
 from __future__ import annotations
 
-import json
+import os as _os
 import subprocess
 from pathlib import Path
 
 import cv2
 import numpy as np
 
+from ..ffmpeg_bin import ffmpeg_exe
 from ..geometry.room import ErrorModel
 from ..scene import Scene
 
@@ -33,7 +34,6 @@ FOCAL_PRIOR = 0.83          # f / long-side (px); iPhone main camera, video mode
 WORK_W = 640
 
 
-import os as _os
 
 # odometry components (D22); environment switches exist for the ablation in bench/video_ablation.py
 # Default = lowest mean ATE in bench/results/video_ablation.md: fast-turn bridging on, Manhattan rotation off (it
@@ -48,19 +48,10 @@ def _gray(img):
     return img if img.ndim == 2 else cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 
-def _probe_rotation(path):
-    try:
-        out = subprocess.check_output(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
-                                       "stream=width,height:stream_side_data=rotation", "-of", "json", str(path)])
-        return json.loads(out)
-    except Exception:
-        return {}
-
-
 def extract_frames(video, out_dir: Path, fps=3.0, width=WORK_W):
     out_dir.mkdir(parents=True, exist_ok=True)
     if not any(out_dir.glob("*.jpg")):
-        subprocess.check_call(["ffmpeg", "-v", "error", "-i", str(video), "-vf",
+        subprocess.check_call([ffmpeg_exe(), "-v", "error", "-i", str(video), "-vf",
                                f"fps={fps},scale={width}:-2", "-q:v", "2", str(out_dir / "%05d.jpg")])
     files = sorted(out_dir.glob("*.jpg"))
     return files
@@ -422,7 +413,7 @@ def gap_rotation(video, t0, t1, width, K, max_frames=60):
     """Rotation across a fast turn that broke 10 fps tracking: decode [t0, t1] at the native frame rate and
     chain frame-to-frame rotations (homography of a pure rotation, R = K^-1 H K). Returns R_rel (camera at
     t1 expressed in camera at t0) or None."""
-    cmd = ["ffmpeg", "-v", "error", "-ss", f"{max(t0, 0):.3f}", "-i", str(video), "-t", f"{t1 - t0:.3f}",
+    cmd = [ffmpeg_exe(), "-v", "error", "-ss", f"{max(t0, 0):.3f}", "-i", str(video), "-t", f"{t1 - t0:.3f}",
            "-vf", f"scale={width}:-2", "-f", "rawvideo", "-pix_fmt", "gray", "pipe:1"]
     raw = subprocess.run(cmd, capture_output=True).stdout
     w = width

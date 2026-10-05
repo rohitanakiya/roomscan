@@ -7,6 +7,7 @@ scikit-image>=0.22
 matplotlib>=3.8
 pillow>=10
 jsonschema>=4
+imageio-ffmpeg>=0.5      # bundled ffmpeg, used only when none is on PATH
 # video / photo tiers additionally need (see README for the CPU-only torch command):
 #   torch>=2.2  transformers>=4.45
 -e .
