@@ -15,4 +15,4 @@ roomscan = "roomscan.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-roomscan = ["calibration.json"]
+roomscan = ["calibration.json", "depth_calibration.json"]

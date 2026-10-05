@@ -112,7 +112,9 @@ def build_scene(root, work: Path, depth_source=None, log=print) -> Scene:
         f"{f_vp:.0f}px")
     depth_model = depth_source or MonoDepth(cache_dir=work.parent.parent / ".cache" / "depth")
     depths = [depth_model.predict(cv2.cvtColor(im, cv2.COLOR_BGR2RGB)) for im in imgs]
-    from .video import DEPTH_SCALE
+    from ..models.depth import depth_scale
+
+    DEPTH_SCALE = depth_scale()
 
     depths = [d * DEPTH_SCALE for d in depths]
     import open3d as o3d

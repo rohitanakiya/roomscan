@@ -1,0 +1,35 @@
+{
+ "model": "Depth-Anything-V2-Metric-Indoor-Small",
+ "device": "iPhone (Stray Scanner RGB, 1920x1440)",
+ "per_capture": {
+  "single_room": {
+   "frames": 30,
+   "ratio_median": 1.351,
+   "ratio_p10": 1.1544,
+   "ratio_p90": 1.7243
+  },
+  "floor_only": {
+   "frames": 30,
+   "ratio_median": 1.2623,
+   "ratio_p10": 1.0612,
+   "ratio_p90": 1.591
+  },
+  "with_ceiling": {
+   "frames": 30,
+   "ratio_median": 1.3057,
+   "ratio_p10": 1.0748,
+   "ratio_p90": 2.0517
+  }
+ },
+ "scale": 0.7655,
+ "leave_one_out_scale": {
+  "single_room": 0.7788,
+  "floor_only": 0.7528,
+  "with_ceiling": 0.7653
+ },
+ "leave_one_out_scale_error_pct": {
+  "single_room": 5.22,
+  "floor_only": -4.97,
+  "with_ceiling": -0.07
+ }
+}

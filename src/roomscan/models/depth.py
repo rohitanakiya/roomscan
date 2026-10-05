@@ -77,3 +77,24 @@ class MonoDepth:
 
 def available() -> bool:
     return (MODEL_DIR / "model.safetensors").exists()
+
+
+def depth_scale() -> float:
+    """Multiplicative correction for the model's metric depth on iPhone video/photos.
+
+    Depth Anything V2 metric-indoor over-estimates distance on these frames by ~25 % (its metric scale is
+    tied to its training cameras). One number per device, fitted against LiDAR frames by
+    bench/calibrate_depth.py and shipped in roomscan/depth_calibration.json. The benchmark overrides it
+    per capture with a leave-one-capture-out value via ROOMSCAN_DEPTH_SCALE, so no capture is scored with a
+    scale fitted on itself.
+    """
+    env = os.environ.get("ROOMSCAN_DEPTH_SCALE")
+    if env:
+        return float(env)
+    f = Path(__file__).resolve().parents[1] / "depth_calibration.json"
+    if f.exists():
+        import json
+
+        return float(json.loads(f.read_text())["scale"])
+    return 1.0
+

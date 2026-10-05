@@ -28,7 +28,7 @@ RUNS = ROOT / "out" / "bench"
 DATA = ROOT / "data"
 
 
-def run(cmd_args, out, force=False, log=print):
+def run(cmd_args, out, force=False, log=print, env=None):
     res = Path(out) / "result.json"
     if res.exists() and not force:
         return json.load(open(res)), None
@@ -41,7 +41,7 @@ def run(cmd_args, out, force=False, log=print):
     cmd = [sys.executable, "-m", "roomscan"] + cmd_args + ["--out", str(out)]
     log("  $ " + " ".join(cmd))
     src = __import__("os").environ.get("ROOMSCAN_SRC", str(ROOT / "src"))   # fix loop: run a tagged checkout
-    p = subprocess.run(cmd, cwd=ROOT, env={**__import__("os").environ, "PYTHONPATH": src},
+    p = subprocess.run(cmd, cwd=ROOT, env={**__import__("os").environ, "PYTHONPATH": src, **(env or {})},
                        capture_output=True, text=True)
     (Path(out)).mkdir(parents=True, exist_ok=True)
     (Path(out) / "log.txt").write_text(p.stdout + p.stderr)
@@ -104,13 +104,19 @@ def main(force=False, outdir=ROOT / "bench" / "results", tiers=("lidar", "video"
     # 2. video + photo tiers
     from roomscan.models.depth import available
 
+    cal_f = ROOT / "bench" / "results" / "depth_calibration.json"
+    loo = json.loads(cal_f.read_text())["leave_one_out_scale"] if cal_f.exists() else {}
+    if loo:
+        B["notes"].append("video/photo: each capture uses the depth scale fitted on the other captures "
+                          "(bench/calibrate_depth.py, leave-one-out)")
     for c in CAPTURES:
         v = DATA / "tiers" / "video" / f"{c}.mp4"
         p = DATA / "tiers" / "photos" / c
+        env = {"ROOMSCAN_DEPTH_SCALE": str(loo[c])} if c in loo else None
         if "video" in tiers and v.exists() and available():
-            R[f"video/{c}"], _ = run([str(v), "--tier", "video", "--no-damage"], RUNS / f"video/{c}", force)
+            R[f"video/{c}"], _ = run([str(v), "--tier", "video", "--no-damage"], RUNS / f"video/{c}", force, env=env)
         if "photo" in tiers and p.exists() and available():
-            R[f"photo/{c}"], _ = run([str(p), "--tier", "photo", "--no-damage"], RUNS / f"photo/{c}", force)
+            R[f"photo/{c}"], _ = run([str(p), "--tier", "photo", "--no-damage"], RUNS / f"photo/{c}", force, env=env)
     if not available():
         B["notes"].append("depth weights not present: video and photo tiers not run")
     for k, v in R.items():
@@ -132,7 +138,13 @@ def main(force=False, outdir=ROOT / "bench" / "results", tiers=("lidar", "video"
     for c in CAPTURES:
         for t in ("video", "photo"):
             if R.get(f"{t}/{c}") and R.get(f"lidar/{c}"):
-                B["comparisons"][f"{t}_vs_lidar:{c}"] = summarise_pair(compare(R[f"lidar/{c}"], R[f"{t}/{c}"]))
+                sp = summarise_pair(compare(R[f"lidar/{c}"], R[f"{t}/{c}"]))
+                fl, ft = R[f"lidar/{c}"]["property"]["footprint_area"], R[f"{t}/{c}"]["property"]["footprint_area"]
+                sp["footprint_rel_err_pct"] = round(100 * (ft["value"] - fl["value"]) / fl["value"], 1)
+                sp["footprint_lidar_in_ci"] = bool(ft["ci95"][0] <= fl["value"] <= ft["ci95"][1])
+                sp["room_overlap_m2"] = R[f"{t}/{c}"]["property"].get("room_overlap_m2")
+                sp["rooms"] = [len(R[f"lidar/{c}"]["rooms"]), len(R[f"{t}/{c}"]["rooms"])]
+                B["comparisons"][f"{t}_vs_lidar:{c}"] = sp
     # 5. staged damage
     st = DATA / "staged" / "single_room_staged"
     if st.exists() and damage:
@@ -177,6 +189,14 @@ def write_md(B, path):
                  f"{s['wall_abs_err_cm_median']} | {s['wall_rel_err_pct_median']} | {s['wall_repeatable_pct']} | "
                  f"{s['wall_within_3pct']} | {s['wall_within_8pct']} | {s['wall_ref_in_ci_pct']} | "
                  f"{s['openings_matched']}/{s['openings_missed']}/{s['openings_phantom']} | {s['opening_within_2cm_pct']} |")
+    thin = {k: s for k, s in B["comparisons"].items() if k.startswith(("video_vs_lidar", "photo_vs_lidar"))}
+    if thin:
+        L.append("\n## Thin tiers vs LiDAR of the same capture (gates: video footprint/walls ±3 %, photo ±8 % "
+                 "and no overlapping rooms)\n\n| comparison | rooms LiDAR/tier | footprint err % | LiDAR footprint in "
+                 "tier 95% CI | room overlap m² | walls within 3% | walls within 8% |\n|---|---|---|---|---|---|---|")
+        for k, s in thin.items():
+            L.append(f"| {k} | {s['rooms'][0]}/{s['rooms'][1]} | {s['footprint_rel_err_pct']} | {s['footprint_lidar_in_ci']} | "
+                     f"{s['room_overlap_m2']} | {s['wall_within_3pct']} | {s['wall_within_8pct']} |")
     if B.get("ceilings"):
         L.append("\n## Ceiling heights (with_ceiling capture)\n\n| room | value m | 95% CI | σ mm |\n|---|---|---|---|")
         for c in B["ceilings"]:

@@ -144,3 +144,33 @@ D20 fix, so the images were still paired with the wrong poses. Two guards: `run_
 (including damage caches) before running, and the frame cache stores a manifest (video path, size, mtime, frame
 offset, width, `CACHE_VERSION`) and rebuilds itself on any mismatch. Clean re-run: staged damage recall 2/2
 (stain area +6.7 %, inside its 95 % interval; crack length −17.5 %), 1 false positive; geometry numbers unchanged.
+
+## D22. Video tier: measure the camera path, then fix what the measurement shows
+With the depth weights available, the first video runs gave plausible totals but wrong rooms. ARKit poses are
+never given to the video tier, but they can score its RGB-only path afterwards (`bench/video_odometry.py`,
+absolute trajectory error after rigid alignment). Findings, each one measured:
+1. **Depth scale.** Depth Anything V2 metric-indoor reads 1.26–1.35× too far on these iPhone frames (stable per
+   capture, p10–p90 1.06–2.05 per frame). One number per device fixes the bias: `bench/calibrate_depth.py`
+   fits it on LiDAR frames and ships it (`roomscan/depth_calibration.json`, 0.766). The benchmark scores every
+   capture with the scale fitted on the *other two* (leave-one-out residual ±5 %), so no capture is scored with
+   a number fitted on itself.
+2. **Fast turns.** Tracked steps are accurate (rotation error 0.9° median), but 17 % of 0.3 s steps lose every
+   KLT track when the camera turns 17–56°. Those gaps were bridged by constant velocity. They are now
+   re-decoded at the native frame rate and the rotation chained frame to frame (`gap_rotation`): floor_only
+   ATE 5.4 → 1.5 m.
+3. **Absolute rotation** from straight image lines (vertical vanishing direction + yaw scan + Gauss-Newton;
+   the mono-depth normals are not square enough to define the frame — even ARKit's true rotation is "corrected"
+   by 8–18° against them). Open doors and close-up fixtures mislead it; acceptance rules (vertical support,
+   both wall axes for large yaw corrections) help, but on floor_only it still doubles ATE. Kept, **off by
+   default** (`ROOMSCAN_VIDEO_MW=1`), as are trusted-only fusion and a floor-normal veto, which made things worse.
+The default was chosen from `bench/results/video_ablation.md` by mean ATE over the captures every configuration
+ran on — the same captures the benchmark reports (there is no held-out video). Honest status: the video tier's
+camera path is still metres off on a multi-room walk; its plans do not meet the ±3 % gate.
+
+## D23. Robustness fixes found by the thin tiers
+- A photo-tier room outline self-intersected after face snapping (shapely refused it in comparison). Outlines are
+  now simplified with growing minimum edge until valid; `compare.py` also repairs geometry defensively.
+- The video tier held every 10 fps frame in colour plus float32 depth: the 3.5 min walkthrough was killed
+  for memory (8 GB machine). Frames are now greyscale in memory, colour is read from disk for depth keyframes
+  only, and depth is float16.
+- Photo inputs were regenerated from the final LiDAR plans and the post-D20 extractor before scoring.

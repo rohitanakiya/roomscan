@@ -1,0 +1,6 @@
+{
+ "scale": 0.7655,
+ "model": "Depth-Anything-V2-Metric-Indoor-Small",
+ "device": "iPhone (Stray Scanner RGB, 1920x1440)",
+ "source": "bench/calibrate_depth.py (bench/results/depth_calibration.json)"
+}

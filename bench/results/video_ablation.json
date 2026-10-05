@@ -1,0 +1,249 @@
+[
+ {
+  "config": "baseline (raw depth scale)",
+  "capture": "single_room",
+  "ate_m": 1.736,
+  "ate_pct": 12.25,
+  "traj_scale": 0.4988,
+  "rooms": 4,
+  "footprint_err_pct": 41.5,
+  "walls": 4,
+  "wall_med_err_pct": 24.77,
+  "wall_within_8pct": 0.0,
+  "odometry": {
+   "pnp": 101,
+   "icp": 5,
+   "constant_velocity": 17,
+   "manhattan_snapped": 0,
+   "fast_turns_bridged": 0
+  }
+ },
+ {
+  "config": "baseline (raw depth scale)",
+  "capture": "floor_only",
+  "ate_m": 6.795,
+  "ate_pct": 12.65,
+  "traj_scale": 0.2051,
+  "rooms": 2,
+  "footprint_err_pct": -80.2,
+  "walls": 0,
+  "wall_med_err_pct": null,
+  "wall_within_8pct": null,
+  "odometry": {
+   "pnp": 311,
+   "icp": 20,
+   "constant_velocity": 51,
+   "manhattan_snapped": 0,
+   "fast_turns_bridged": 0
+  }
+ },
+ {
+  "config": "baseline (raw depth scale)",
+  "capture": "with_ceiling",
+  "ate_m": 12.593,
+  "ate_pct": 12.74,
+  "traj_scale": 0.0822,
+  "rooms": 6,
+  "footprint_err_pct": -40.7,
+  "walls": 0,
+  "wall_med_err_pct": null,
+  "wall_within_8pct": null,
+  "odometry": {
+   "pnp": 570,
+   "icp": 45,
+   "constant_velocity": 101,
+   "manhattan_snapped": 0,
+   "fast_turns_bridged": 0
+  }
+ },
+ {
+  "config": "+ depth scale (leave-one-out)",
+  "capture": "single_room",
+  "ate_m": 1.326,
+  "ate_pct": 9.36,
+  "traj_scale": 0.6338,
+  "rooms": 3,
+  "footprint_err_pct": -7.1,
+  "walls": 1,
+  "wall_med_err_pct": 6.43,
+  "wall_within_8pct": 100.0,
+  "odometry": {
+   "pnp": 101,
+   "icp": 6,
+   "constant_velocity": 16,
+   "manhattan_snapped": 0,
+   "fast_turns_bridged": 0
+  }
+ },
+ {
+  "config": "+ depth scale (leave-one-out)",
+  "capture": "floor_only",
+  "ate_m": 5.396,
+  "ate_pct": 10.04,
+  "traj_scale": 0.244,
+  "rooms": 0,
+  "footprint_err_pct": -100.0,
+  "walls": null,
+  "wall_med_err_pct": null,
+  "wall_within_8pct": null,
+  "odometry": {
+   "pnp": 311,
+   "icp": 24,
+   "constant_velocity": 47,
+   "manhattan_snapped": 0,
+   "fast_turns_bridged": 0
+  }
+ },
+ {
+  "config": "+ fast-turn bridging",
+  "capture": "single_room",
+  "ate_m": 1.126,
+  "ate_pct": 7.95,
+  "traj_scale": 0.6573,
+  "rooms": 2,
+  "footprint_err_pct": -4.3,
+  "walls": 2,
+  "wall_med_err_pct": 31.56,
+  "wall_within_8pct": 50.0,
+  "odometry": {
+   "pnp": 101,
+   "icp": 2,
+   "constant_velocity": 20,
+   "manhattan_snapped": 0,
+   "fast_turns_bridged": 16
+  }
+ },
+ {
+  "config": "+ fast-turn bridging",
+  "capture": "floor_only",
+  "ate_m": 1.467,
+  "ate_pct": 2.73,
+  "traj_scale": 1.0122,
+  "rooms": 3,
+  "footprint_err_pct": -24.7,
+  "walls": 1,
+  "wall_med_err_pct": 46.52,
+  "wall_within_8pct": 0.0,
+  "odometry": {
+   "pnp": 311,
+   "icp": 9,
+   "constant_velocity": 62,
+   "manhattan_snapped": 0,
+   "fast_turns_bridged": 65
+  }
+ },
+ {
+  "config": "+ Manhattan rotation (lines)",
+  "capture": "single_room",
+  "ate_m": 0.69,
+  "ate_pct": 4.87,
+  "traj_scale": 0.8059,
+  "rooms": 7,
+  "footprint_err_pct": 18.6,
+  "walls": 0,
+  "wall_med_err_pct": null,
+  "wall_within_8pct": null,
+  "odometry": {
+   "pnp": 101,
+   "icp": 2,
+   "constant_velocity": 20,
+   "manhattan_snapped": 82,
+   "fast_turns_bridged": 16
+  }
+ },
+ {
+  "config": "+ Manhattan rotation (lines)",
+  "capture": "floor_only",
+  "ate_m": 2.683,
+  "ate_pct": 4.99,
+  "traj_scale": 0.7336,
+  "rooms": 4,
+  "footprint_err_pct": 0.9,
+  "walls": 2,
+  "wall_med_err_pct": 43.79,
+  "wall_within_8pct": 0.0,
+  "odometry": {
+   "pnp": 311,
+   "icp": 9,
+   "constant_velocity": 62,
+   "manhattan_snapped": 225,
+   "fast_turns_bridged": 65
+  }
+ },
+ {
+  "config": "+ fuse trusted keyframes only",
+  "capture": "single_room",
+  "ate_m": 0.69,
+  "ate_pct": 4.87,
+  "traj_scale": 0.8059,
+  "rooms": 5,
+  "footprint_err_pct": -21.4,
+  "walls": 2,
+  "wall_med_err_pct": 30.22,
+  "wall_within_8pct": 50.0,
+  "odometry": {
+   "pnp": 101,
+   "icp": 2,
+   "constant_velocity": 20,
+   "manhattan_snapped": 82,
+   "fast_turns_bridged": 16
+  }
+ },
+ {
+  "config": "+ fuse trusted keyframes only",
+  "capture": "floor_only",
+  "ate_m": 2.683,
+  "ate_pct": 4.99,
+  "traj_scale": 0.7336,
+  "rooms": 7,
+  "footprint_err_pct": -27.1,
+  "walls": 2,
+  "wall_med_err_pct": 33.6,
+  "wall_within_8pct": 0.0,
+  "odometry": {
+   "pnp": 311,
+   "icp": 9,
+   "constant_velocity": 62,
+   "manhattan_snapped": 225,
+   "fast_turns_bridged": 65
+  }
+ },
+ {
+  "config": "+ floor-normal veto 15 deg",
+  "capture": "single_room",
+  "ate_m": 1.29,
+  "ate_pct": 9.1,
+  "traj_scale": 0.6088,
+  "rooms": 0,
+  "footprint_err_pct": -100.0,
+  "walls": null,
+  "wall_med_err_pct": null,
+  "wall_within_8pct": null,
+  "odometry": {
+   "pnp": 101,
+   "icp": 2,
+   "constant_velocity": 20,
+   "manhattan_snapped": 53,
+   "fast_turns_bridged": 16
+  }
+ },
+ {
+  "config": "+ floor-normal veto 15 deg",
+  "capture": "floor_only",
+  "ate_m": 2.924,
+  "ate_pct": 5.44,
+  "traj_scale": 0.5406,
+  "rooms": 2,
+  "footprint_err_pct": -79.4,
+  "walls": 2,
+  "wall_med_err_pct": 48.61,
+  "wall_within_8pct": 50.0,
+  "odometry": {
+   "pnp": 311,
+   "icp": 9,
+   "constant_velocity": 62,
+   "manhattan_snapped": 236,
+   "fast_turns_bridged": 65
+  }
+ }
+]
