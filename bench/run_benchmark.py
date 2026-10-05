@@ -144,6 +144,11 @@ def main(force=False, outdir=ROOT / "bench" / "results", tiers=("lidar", "video"
                 sp["footprint_lidar_in_ci"] = bool(ft["ci95"][0] <= fl["value"] <= ft["ci95"][1])
                 sp["room_overlap_m2"] = R[f"{t}/{c}"]["property"].get("room_overlap_m2")
                 sp["rooms"] = [len(R[f"lidar/{c}"]["rooms"]), len(R[f"{t}/{c}"]["rooms"])]
+                traj = RUNS / f"{t}/{c}" / "work" / "trajectory.npz"
+                if t == "video" and traj.exists():      # RGB-only camera path vs ARKit (never an input to the tier)
+                    from video_odometry import evaluate as _ate
+                    a = _ate(traj, DATA / "raw" / c)["raw"]
+                    sp["ate_m"], sp["ate_pct_of_path"] = a["ate_rmse_m"], a["ate_per_m_walked_pct"]
                 B["comparisons"][f"{t}_vs_lidar:{c}"] = sp
     # 5. staged damage
     st = DATA / "staged" / "single_room_staged"
@@ -193,10 +198,15 @@ def write_md(B, path):
     if thin:
         L.append("\n## Thin tiers vs LiDAR of the same capture (gates: video footprint/walls ±3 %, photo ±8 % "
                  "and no overlapping rooms)\n\n| comparison | rooms LiDAR/tier | footprint err % | LiDAR footprint in "
-                 "tier 95% CI | room overlap m² | walls within 3% | walls within 8% |\n|---|---|---|---|---|---|---|")
+                 "tier 95% CI | room overlap m² | walls compared | walls within 3% | walls within 8% | camera path ATE vs ARKit "
+                 "m (% of path) |\n|---|---|---|---|---|---|---|---|---|")
         for k, s in thin.items():
+            na = lambda v: "—" if v is None else v
+            ate = f"{s['ate_m']} ({s['ate_pct_of_path']}%)" if "ate_m" in s else "—"
             L.append(f"| {k} | {s['rooms'][0]}/{s['rooms'][1]} | {s['footprint_rel_err_pct']} | {s['footprint_lidar_in_ci']} | "
-                     f"{s['room_overlap_m2']} | {s['wall_within_3pct']} | {s['wall_within_8pct']} |")
+                     f"{s['room_overlap_m2']} | {s['walls_compared']} | {na(s['wall_within_3pct'])} | {na(s['wall_within_8pct'])} | {ate} |")
+        L.append("\nWalls are compared only inside room pairs that overlap with IoU ≥ 0.4; where a thin tier merges or "
+                 "misplaces rooms there is nothing to compare, which is itself the result.")
     if B.get("ceilings"):
         L.append("\n## Ceiling heights (with_ceiling capture)\n\n| room | value m | 95% CI | σ mm |\n|---|---|---|---|")
         for c in B["ceilings"]:

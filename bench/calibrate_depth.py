@@ -27,7 +27,7 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts"))
 from make_tier_inputs import rotate_img  # noqa: E402
 from roomscan.io.stray import load_stray  # noqa: E402
-from roomscan.models.depth import MonoDepth  # noqa: E402
+from roomscan.models.depth import MonoDepth, default_cache_dir  # noqa: E402
 
 CAPTURES = ["single_room", "floor_only", "with_ceiling"]
 N_FRAMES = 30
@@ -63,7 +63,7 @@ def capture_ratio(name, model):
 
 
 def main():
-    model = MonoDepth(cache_dir=ROOT / "out" / ".cache" / "depth")
+    model = MonoDepth(cache_dir=default_cache_dir())
     per = {c: capture_ratio(c, model) for c in CAPTURES}
     for c, v in per.items():
         print(f"{c}: model/LiDAR depth = {v['ratio_median']} (p10 {v['ratio_p10']}, p90 {v['ratio_p90']}, n={v['frames']})")

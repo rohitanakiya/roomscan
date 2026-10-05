@@ -182,3 +182,19 @@ distance walked. Video: scale 5 %, drift 1.5 %/m of path, face 3 cm. Photo: scal
 failure in the photo tier (rooms stacked on each other) is *not* absorbed into an interval — the benchmark scores
 it and the report states it. Whether the LiDAR value falls inside the thin tier's 95 % interval is reported
 per capture (`footprint_lidar_in_ci`, `wall_ref_in_ci_pct`): that is the calibration score at every tier.
+
+## D25. Same input, same plan
+Two video runs of the same clip with the same code gave 1 room vs 2 rooms (trajectories split at keyframe 8):
+OpenCV's RANSAC draws from a random generator whose state was not fixed, and the video tier amplifies one different
+inlier set into a different room split. `cv2.setRNGSeed(0)` at the start of each thin-tier run (and one OpenCV
+thread in the photo tier, whose parallel RANSAC draws from per-thread generators) makes runs bit-identical —
+checked with four simultaneous video runs and three photo runs under load. The video ablation was re-run after
+this fix; the earlier, unseeded table is not used anywhere. Lesson recorded in the report: the video tier's
+output is *sensitive* to small perturbations, which is itself a finding about its reliability.
+Second source, found the same way: each run kept its own depth cache, and one cache had been filled on a different
+host before a session restart. CPU inference is bit-identical only for the same thread count and CPU kernels;
+on different ones ~0.02 % of float16 depths differ — and that alone moved a photo-tier footprint from 7.73 to 7.11 m².
+Now there is one cache per checkout (`out/.cache/depth`, the cached outputs replay bit-identically) and torch runs
+on a pinned thread count (`ROOMSCAN_TORCH_THREADS`, default 2). All thin-tier numbers were recomputed from an empty
+cache on one host. The photo stitch's sensitivity to perturbations this small is reported as a limitation.
+

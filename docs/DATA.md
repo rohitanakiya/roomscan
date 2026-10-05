@@ -17,15 +17,15 @@ Capture style (from camera pitch): `single_room` and `floor_only` aim low (floor
 | capture | video file | sha | photo folders (photos) |
 |---|---|---|---|
 | single_room | `data/tiers/video/single_room.mp4` | a612628609fa2342 | room_1 (7), room_2 (7), room_3 (7), room_4 (7) |
-| floor_only | `data/tiers/video/floor_only.mp4` | 14fd06a59b91ba19 | room_1 (6), room_2 (8), room_3 (6), room_4 (6), room_5 (7) |
-| with_ceiling | `data/tiers/video/with_ceiling.mp4` | ee1cb86c5ca34bc7 | room_1 (5), room_2 (6), room_3 (6), room_4 (6), room_5 (6) |
+| floor_only | `data/tiers/video/floor_only.mp4` | 14fd06a59b91ba19 | room_1 (7), room_2 (7), room_3 (6), room_4 (7), room_5 (7) |
+| with_ceiling | `data/tiers/video/with_ceiling.mp4` | ee1cb86c5ca34bc7 | room_1 (7), room_2 (7), room_3 (8), room_4 (8), room_5 (8) |
 
 ## Staged damage (`data/staged/single_room_staged/`, by `bench/stage_damage.py`)
 
 | id | class | room/wall (at staging) | size | truth |
 |---|---|---|---|---|
-| GT1 | water_stain | R2/R2-W1 | 0.42×0.32 m | area 0.1038 m² |
-| GT2 | crack | R2/R2-W2 | 0.1×0.6 m | length 0.60 m |
+| GT1 | water_stain | R3/R3-W2 | 0.42×0.32 m | area 0.1038 m² |
+| GT2 | crack | R3/R3-W1 | 0.1×0.6 m | length 0.60 m |
 
 ## Not available (and why)
 

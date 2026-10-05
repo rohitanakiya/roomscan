@@ -26,7 +26,9 @@ class MonoDepth:
         self.cache_dir = Path(cache_dir) if cache_dir else None
         self._model = None
         self.device = device
-        self.threads = threads
+        # CPU inference is bit-identical run to run only at a fixed thread count (a different count flips ~0.02 % of
+        # float16 depths - enough to change a photo-tier stitch, D25); pinned so live runs reproduce the cache
+        self.threads = threads or int(os.environ.get("ROOMSCAN_TORCH_THREADS", "2"))
 
     def _load(self):
         if self._model is not None:
@@ -98,3 +100,8 @@ def depth_scale() -> float:
         return float(json.loads(f.read_text())["scale"])
     return 1.0
 
+
+def default_cache_dir() -> Path:
+    """One depth cache per checkout (out/.cache/depth), shared by every run and tier; ROOMSCAN_CACHE overrides."""
+    root = Path(os.environ.get("ROOMSCAN_CACHE", Path(__file__).resolve().parents[3] / "out" / ".cache"))
+    return root / "depth"

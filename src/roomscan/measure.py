@@ -23,7 +23,9 @@ class Measure:
 
     @property
     def lo(self):
-        return self.value - Z95 * self.sigma
+        lo = self.value - Z95 * self.sigma
+        # lengths and areas cannot be negative: a very wide (honest) interval is truncated at zero
+        return max(0.0, lo) if self.unit in ("m", "m2") else lo
 
     @property
     def hi(self):

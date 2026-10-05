@@ -85,7 +85,9 @@ def _rel_pose(kp_a, des_a, kp_b, des_b, depth_a, K_a, K_b, ratio=0.8):
 
 
 def build_scene(root, work: Path, depth_source=None, log=print) -> Scene:
-    from ..models.depth import MonoDepth
+    cv2.setRNGSeed(0)          # RANSAC repeatable run to run (D25)
+    cv2.setNumThreads(1)       # OpenCV's parallel RANSAC draws from per-thread generators: keep one thread
+    from ..models.depth import MonoDepth, default_cache_dir
 
     root, work = Path(root), Path(work)
     folders = load_folders(root)
@@ -112,7 +114,7 @@ def build_scene(root, work: Path, depth_source=None, log=print) -> Scene:
         Ks[i] = np.array([[f, 0, w / 2], [0, f, h / 2], [0, 0, 1.0]])
     log(f"  photo: {len(imgs)} photos in {len(folders)} room folders; focal {'EXIF' if any(_exif_focal(n, 1) for n in names) else 'VP'} "
         f"{f_vp:.0f}px")
-    depth_model = depth_source or MonoDepth(cache_dir=work.parent.parent / ".cache" / "depth")
+    depth_model = depth_source or MonoDepth(cache_dir=default_cache_dir())
     depths = [depth_model.predict(cv2.cvtColor(im, cv2.COLOR_BGR2RGB)) for im in imgs]
     from ..models.depth import depth_scale
 

@@ -489,7 +489,7 @@ def build_scene(video, work: Path, fps=10.0, depth_every=3, depth_source=None, l
     """fps: tracking rate; depth runs on every `depth_every`-th tracked frame (keyframes)."""
     from ..geometry.drift import correct_drift
     from ..geometry.fusion import select_keyframes
-    from ..models.depth import MonoDepth
+    from ..models.depth import MonoDepth, default_cache_dir
 
     video = Path(video)
     if video.is_dir():
@@ -514,7 +514,7 @@ def build_scene(video, work: Path, fps=10.0, depth_every=3, depth_source=None, l
     K = np.array([[f, 0, w / 2], [0, f, h / 2], [0, 0, 1.0]])
     log(f"  video: {len(imgs)} frames tracked at {fps} fps, {len(kfi)} depth keyframes, {w}x{h}, "
         f"focal prior {f0:.0f}px, VP focal {f_vp:.0f}px")
-    depth_model = depth_source or MonoDepth(cache_dir=work.parent.parent / ".cache" / "depth")
+    depth_model = depth_source or MonoDepth(cache_dir=default_cache_dir())
     from ..models.depth import depth_scale
 
     DEPTH_SCALE = depth_scale()

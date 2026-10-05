@@ -14,6 +14,10 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 
+def _na(v, unit=""):
+    return "—" if v is None else f"{v}{unit}"
+
+
 def _video_ablation():
     f = Path(__file__).resolve().parent / "results" / "video_ablation.md"
     if not f.exists():
@@ -126,12 +130,15 @@ def main():
     thin = [(k, s) for k, s in comp.items() if k.startswith(("video_vs_lidar", "photo_vs_lidar"))]
     R.append("\n### Thin tiers vs the LiDAR tier of the same capture")
     if thin:
-        R.append("| comparison | rooms LiDAR/tier | footprint err % (gate: video ±3, photo ±8) | LiDAR footprint in 95% CI | room overlap m² | walls | median \\|ΔL\\| % | walls within 3% | walls within 8% | LiDAR wall in 95% CI |")
+        R.append("| comparison | rooms LiDAR/tier | footprint err % (gate: video ±3, photo ±8) | LiDAR footprint in 95% CI | room overlap m² | walls | median \\|ΔL\\| % | walls within 3% | walls within 8% | camera path ATE m |")
         R.append("|---|---|---|---|---|---|---|---|---|---|")
         for k, s in thin:
             R.append(f"| {k} | {s.get('rooms', ['', ''])[0]}/{s.get('rooms', ['', ''])[1]} | {s.get('footprint_rel_err_pct')} | "
                      f"{s.get('footprint_lidar_in_ci')} | {s.get('room_overlap_m2')} | {s['walls_compared']} | "
-                     f"{s['wall_rel_err_pct_median']} | {s['wall_within_3pct']}% | {s['wall_within_8pct']}% | {s['wall_ref_in_ci_pct']}% |")
+                     f"{_na(s['wall_rel_err_pct_median'])} | {_na(s['wall_within_3pct'], '%')} | {_na(s['wall_within_8pct'], '%')} | "
+                     f"{s.get('ate_m', '—')} |")
+        R.append("\nWalls are compared only inside room pairs overlapping with IoU ≥ 0.4 (— = no such pair). Camera path ATE: "
+                 "RMS distance between the video tier's RGB-only path and ARKit after rigid alignment.")
     else:
         R.append("Not run in this benchmark: " + "; ".join(B.get("notes", [])) + ". The tiers run end-to-end; "
                  "their odometry/registration code was exercised in development with LiDAR depth substituted for the "

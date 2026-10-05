@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-04 18:45:23",
+ "generated": "2026-10-05 05:21:27",
  "runs": {
   "lidar/single_room": {
    "rooms": 4,
@@ -27,13 +27,13 @@
     "max_correction_m": 0.0973
    },
    "timing": {
-    "reconstruct_s": 12.4,
-    "layout_s": 0.9,
-    "damage_s": 74.0,
-    "total_s": 87.5
+    "reconstruct_s": 32.8,
+    "layout_s": 1.6,
+    "damage_s": 149.8,
+    "total_s": 184.5
    },
    "wall_sharpness": 0.6998,
-   "room_overlap_m2": 0.7989
+   "room_overlap_m2": 0.7988
   },
   "lidar/single_room/no_drift": {
    "rooms": 4,
@@ -55,9 +55,9 @@
     "enabled": false
    },
    "timing": {
-    "reconstruct_s": 3.9,
-    "layout_s": 1.0,
-    "total_s": 5.1
+    "reconstruct_s": 5.3,
+    "layout_s": 1.2,
+    "total_s": 6.8
    },
    "wall_sharpness": 0.6065,
    "room_overlap_m2": 0.9406
@@ -68,7 +68,7 @@
     "value": 63.799,
     "ci95": [
      61.652,
-     65.947
+     65.946
     ],
     "sigma": 1.096,
     "unit": "m2",
@@ -88,10 +88,10 @@
     "max_correction_m": 0.2431
    },
    "timing": {
-    "reconstruct_s": 78.0,
-    "layout_s": 5.3,
-    "damage_s": 143.8,
-    "total_s": 227.3
+    "reconstruct_s": 120.8,
+    "layout_s": 7.9,
+    "damage_s": 221.7,
+    "total_s": 350.8
    },
    "wall_sharpness": 0.489,
    "room_overlap_m2": 0.1389
@@ -116,9 +116,9 @@
     "enabled": false
    },
    "timing": {
-    "reconstruct_s": 13.9,
-    "layout_s": 5.3,
-    "total_s": 19.4
+    "reconstruct_s": 18.4,
+    "layout_s": 8.4,
+    "total_s": 27.1
    },
    "wall_sharpness": 0.5145,
    "room_overlap_m2": 0.8279
@@ -149,10 +149,10 @@
     "max_correction_m": 0.1464
    },
    "timing": {
-    "reconstruct_s": 283.6,
-    "layout_s": 10.7,
-    "damage_s": 223.6,
-    "total_s": 518.1
+    "reconstruct_s": 403.3,
+    "layout_s": 13.8,
+    "damage_s": 345.9,
+    "total_s": 763.3
    },
    "wall_sharpness": 0.4625,
    "room_overlap_m2": 0.0
@@ -177,47 +177,242 @@
     "enabled": false
    },
    "timing": {
-    "reconstruct_s": 28.6,
-    "layout_s": 9.8,
-    "total_s": 38.6
+    "reconstruct_s": 36.6,
+    "layout_s": 13.6,
+    "total_s": 50.6
    },
    "wall_sharpness": 0.3541,
+   "room_overlap_m2": 0.0
+  },
+  "video/single_room": {
+   "rooms": 1,
+   "footprint": {
+    "value": 32.021,
+    "ci95": [
+     22.061,
+     41.981
+    ],
+    "sigma": 5.082,
+    "unit": "m2",
+    "observed": true,
+    "error_budget_1sigma": {
+     "rooms": 5.082
+    }
+   },
+   "drift": {
+    "method": "fragment pose graph + ICP loop closure",
+    "enabled": true,
+    "fragments": 14,
+    "loop_edges": 0,
+    "mean_loop_residual_m": null,
+    "max_correction_m": 0.0
+   },
+   "timing": {
+    "reconstruct_s": 44.4,
+    "layout_s": 1.3,
+    "total_s": 46.0
+   },
+   "wall_sharpness": 0.2459,
+   "room_overlap_m2": 0.0
+  },
+  "photo/single_room": {
+   "rooms": 3,
+   "footprint": {
+    "value": 7.108,
+    "ci95": [
+     5.324,
+     8.892
+    ],
+    "sigma": 0.91,
+    "unit": "m2",
+    "observed": true,
+    "error_budget_1sigma": {
+     "rooms": 0.91
+    }
+   },
+   "drift": null,
+   "timing": {
+    "reconstruct_s": 28.1,
+    "layout_s": 0.5,
+    "total_s": 29.0
+   },
+   "wall_sharpness": 0.1933,
+   "room_overlap_m2": 0.3735
+  },
+  "video/floor_only": {
+   "rooms": 3,
+   "footprint": {
+    "value": 47.308,
+    "ci95": [
+     19.107,
+     75.509
+    ],
+    "sigma": 14.388,
+    "unit": "m2",
+    "observed": true,
+    "error_budget_1sigma": {
+     "rooms": 14.388
+    }
+   },
+   "drift": {
+    "method": "fragment pose graph + ICP loop closure",
+    "enabled": true,
+    "fragments": 49,
+    "loop_edges": 0,
+    "mean_loop_residual_m": null,
+    "max_correction_m": 0.0
+   },
+   "timing": {
+    "reconstruct_s": 195.9,
+    "layout_s": 8.3,
+    "total_s": 204.5
+   },
+   "wall_sharpness": 0.1653,
+   "room_overlap_m2": 0.1505
+  },
+  "photo/floor_only": {
+   "rooms": 3,
+   "footprint": {
+    "value": 19.746,
+    "ci95": [
+     15.374,
+     24.119
+    ],
+    "sigma": 2.231,
+    "unit": "m2",
+    "observed": true,
+    "error_budget_1sigma": {
+     "rooms": 2.231
+    }
+   },
+   "drift": null,
+   "timing": {
+    "reconstruct_s": 32.5,
+    "layout_s": 0.7,
+    "total_s": 33.6
+   },
+   "wall_sharpness": 0.5466,
+   "room_overlap_m2": 0.2733
+  },
+  "video/with_ceiling": {
+   "rooms": 2,
+   "footprint": {
+    "value": 63.68,
+    "ci95": [
+     0.0,
+     139.99
+    ],
+    "sigma": 38.934,
+    "unit": "m2",
+    "observed": true,
+    "error_budget_1sigma": {
+     "rooms": 38.934
+    }
+   },
+   "drift": {
+    "method": "fragment pose graph + ICP loop closure",
+    "enabled": true,
+    "fragments": 97,
+    "loop_edges": 0,
+    "mean_loop_residual_m": null,
+    "max_correction_m": 0.0
+   },
+   "timing": {
+    "reconstruct_s": 384.0,
+    "layout_s": 19.0,
+    "total_s": 403.4
+   },
+   "wall_sharpness": 0.2148,
+   "room_overlap_m2": 0.5219
+  },
+  "photo/with_ceiling": {
+   "rooms": 3,
+   "footprint": {
+    "value": 12.643,
+    "ci95": [
+     9.881,
+     15.406
+    ],
+    "sigma": 1.409,
+    "unit": "m2",
+    "observed": true,
+    "error_budget_1sigma": {
+     "rooms": 1.409
+    }
+   },
+   "drift": null,
+   "timing": {
+    "reconstruct_s": 36.9,
+    "layout_s": 0.6,
+    "total_s": 37.9
+   },
+   "wall_sharpness": 0.308,
    "room_overlap_m2": 0.0
   }
  },
  "timing": {
   "lidar/single_room": {
-   "reconstruct_s": 12.4,
-   "layout_s": 0.9,
-   "damage_s": 74.0,
-   "total_s": 87.5
+   "reconstruct_s": 32.8,
+   "layout_s": 1.6,
+   "damage_s": 149.8,
+   "total_s": 184.5
   },
   "lidar/single_room/no_drift": {
-   "reconstruct_s": 3.9,
-   "layout_s": 1.0,
-   "total_s": 5.1
+   "reconstruct_s": 5.3,
+   "layout_s": 1.2,
+   "total_s": 6.8
   },
   "lidar/floor_only": {
-   "reconstruct_s": 78.0,
-   "layout_s": 5.3,
-   "damage_s": 143.8,
-   "total_s": 227.3
+   "reconstruct_s": 120.8,
+   "layout_s": 7.9,
+   "damage_s": 221.7,
+   "total_s": 350.8
   },
   "lidar/floor_only/no_drift": {
-   "reconstruct_s": 13.9,
-   "layout_s": 5.3,
-   "total_s": 19.4
+   "reconstruct_s": 18.4,
+   "layout_s": 8.4,
+   "total_s": 27.1
   },
   "lidar/with_ceiling": {
-   "reconstruct_s": 283.6,
-   "layout_s": 10.7,
-   "damage_s": 223.6,
-   "total_s": 518.1
+   "reconstruct_s": 403.3,
+   "layout_s": 13.8,
+   "damage_s": 345.9,
+   "total_s": 763.3
   },
   "lidar/with_ceiling/no_drift": {
-   "reconstruct_s": 28.6,
-   "layout_s": 9.8,
-   "total_s": 38.6
+   "reconstruct_s": 36.6,
+   "layout_s": 13.6,
+   "total_s": 50.6
+  },
+  "video/single_room": {
+   "reconstruct_s": 44.4,
+   "layout_s": 1.3,
+   "total_s": 46.0
+  },
+  "photo/single_room": {
+   "reconstruct_s": 28.1,
+   "layout_s": 0.5,
+   "total_s": 29.0
+  },
+  "video/floor_only": {
+   "reconstruct_s": 195.9,
+   "layout_s": 8.3,
+   "total_s": 204.5
+  },
+  "photo/floor_only": {
+   "reconstruct_s": 32.5,
+   "layout_s": 0.7,
+   "total_s": 33.6
+  },
+  "video/with_ceiling": {
+   "reconstruct_s": 384.0,
+   "layout_s": 19.0,
+   "total_s": 403.4
+  },
+  "photo/with_ceiling": {
+   "reconstruct_s": 36.9,
+   "layout_s": 0.6,
+   "total_s": 37.9
   }
  },
  "comparisons": {
@@ -291,10 +486,10 @@
      "kind": "floor_area",
      "room_a": "R1",
      "room_b": "R1",
-     "a": 35.384,
+     "a": 35.383,
      "b": 30.454,
-     "diff": -4.93,
-     "rel": -0.13932851006104452,
+     "diff": -4.929000000000002,
+     "rel": -0.13930418562586558,
      "a_in_b_ci": false
     },
     {
@@ -1914,10 +2109,525 @@
      "b": 0.87
     }
    ]
+  },
+  "video_vs_lidar:single_room": {
+   "registration": {
+    "R": [
+     [
+      0.0155,
+      -0.9999
+     ],
+     [
+      0.9999,
+      0.0155
+     ]
+    ],
+    "t": [
+     3.814,
+     -0.018
+    ],
+    "score": 0.271,
+    "yaw_deg": 89.11
+   },
+   "room_pairs": [],
+   "walls_compared": 0,
+   "wall_abs_err_cm_median": null,
+   "wall_rel_err_pct_median": null,
+   "wall_repeatable_pct": null,
+   "wall_within_3pct": null,
+   "wall_within_8pct": null,
+   "wall_ref_in_ci_pct": null,
+   "openings_matched": 0,
+   "openings_missed": 0,
+   "openings_phantom": 0,
+   "opening_within_2cm_pct": null,
+   "floor_area_rel_err_pct": [],
+   "ceiling_diff_cm": [],
+   "rows": [],
+   "footprint_rel_err_pct": 38.5,
+   "footprint_lidar_in_ci": true,
+   "room_overlap_m2": 0.0,
+   "rooms": [
+    4,
+    1
+   ],
+   "ate_m": 1.099,
+   "ate_pct_of_path": 7.75
+  },
+  "photo_vs_lidar:single_room": {
+   "registration": {
+    "R": [
+     [
+      -0.9999,
+      0.0153
+     ],
+     [
+      -0.0153,
+      -0.9999
+     ]
+    ],
+    "t": [
+     -1.49,
+     4.634
+    ],
+    "score": 0.264,
+    "yaw_deg": -179.13
+   },
+   "room_pairs": [],
+   "walls_compared": 0,
+   "wall_abs_err_cm_median": null,
+   "wall_rel_err_pct_median": null,
+   "wall_repeatable_pct": null,
+   "wall_within_3pct": null,
+   "wall_within_8pct": null,
+   "wall_ref_in_ci_pct": null,
+   "openings_matched": 0,
+   "openings_missed": 0,
+   "openings_phantom": 0,
+   "opening_within_2cm_pct": null,
+   "floor_area_rel_err_pct": [],
+   "ceiling_diff_cm": [],
+   "rows": [],
+   "footprint_rel_err_pct": -69.3,
+   "footprint_lidar_in_ci": false,
+   "room_overlap_m2": 0.3735,
+   "rooms": [
+    4,
+    3
+   ]
+  },
+  "video_vs_lidar:floor_only": {
+   "registration": {
+    "R": [
+     [
+      -0.0054,
+      1.0
+     ],
+     [
+      -1.0,
+      -0.0054
+     ]
+    ],
+    "t": [
+     1.646,
+     10.226
+    ],
+    "score": 0.157,
+    "yaw_deg": -90.31
+   },
+   "room_pairs": [
+    [
+     "R1",
+     "R1",
+     0.404
+    ],
+    [
+     "R2",
+     "R3",
+     0.476
+    ]
+   ],
+   "walls_compared": 5,
+   "wall_abs_err_cm_median": 140.0,
+   "wall_rel_err_pct_median": 60.87,
+   "wall_repeatable_pct": 0.0,
+   "wall_within_3pct": 0.0,
+   "wall_within_8pct": 20.0,
+   "wall_ref_in_ci_pct": 60.0,
+   "openings_matched": 0,
+   "openings_missed": 5,
+   "openings_phantom": 6,
+   "opening_within_2cm_pct": 0.0,
+   "floor_area_rel_err_pct": [
+    -28.8,
+    -42.1
+   ],
+   "ceiling_diff_cm": [],
+   "rows": [
+    {
+     "kind": "floor_area",
+     "room_a": "R1",
+     "room_b": "R1",
+     "a": 35.383,
+     "b": 25.185,
+     "diff": -10.198000000000004,
+     "rel": -0.28821750558177667,
+     "a_in_b_ci": true
+    },
+    {
+     "kind": "wall_length",
+     "room_a": "R1",
+     "room_b": "R1",
+     "id_a": "R1-W2",
+     "id_b": "R1-W11",
+     "a": 1.943,
+     "b": 0.34,
+     "observed": false,
+     "diff": -1.603,
+     "rel": -0.8250128667009778,
+     "a_in_b_ci": false
+    },
+    {
+     "kind": "wall_length",
+     "room_a": "R1",
+     "room_b": "R1",
+     "id_a": "R1-W4",
+     "id_b": "R1-W19",
+     "a": 2.106,
+     "b": 0.427,
+     "observed": false,
+     "diff": -1.6789999999999998,
+     "rel": -0.7972459639126306,
+     "a_in_b_ci": false
+    },
+    {
+     "kind": "wall_length",
+     "room_a": "R1",
+     "room_b": "R1",
+     "id_a": "R1-W18",
+     "id_b": "R1-W27",
+     "a": 1.6,
+     "b": 1.69,
+     "observed": true,
+     "diff": 0.08999999999999986,
+     "rel": 0.05624999999999991,
+     "a_in_b_ci": true
+    },
+    {
+     "kind": "wall_length",
+     "room_a": "R1",
+     "room_b": "R1",
+     "id_a": "R1-W19",
+     "id_b": "R1-W28",
+     "a": 1.41,
+     "b": 1.272,
+     "observed": false,
+     "diff": -0.1379999999999999,
+     "rel": -0.09787234042553185,
+     "a_in_b_ci": true
+    },
+    {
+     "kind": "wall_length",
+     "room_a": "R1",
+     "room_b": "R1",
+     "id_a": "R1-W20",
+     "id_b": "R1-W31",
+     "a": 3.409,
+     "b": 0.645,
+     "observed": true,
+     "diff": -2.764,
+     "rel": -0.8107949545321208,
+     "a_in_b_ci": false
+    },
+    {
+     "kind": "wall_length",
+     "room_a": "R1",
+     "room_b": "R1",
+     "id_a": "R1-W21",
+     "id_b": "R1-W2",
+     "a": 1.647,
+     "b": 0.942,
+     "observed": true,
+     "diff": -0.7050000000000001,
+     "rel": -0.42805100182149364,
+     "a_in_b_ci": true
+    },
+    {
+     "kind": "wall_length",
+     "room_a": "R1",
+     "room_b": "R1",
+     "id_a": "R1-W23",
+     "id_b": "R1-W6",
+     "a": 1.45,
+     "b": 0.296,
+     "observed": false,
+     "diff": -1.154,
+     "rel": -0.7958620689655173,
+     "a_in_b_ci": true
+    },
+    {
+     "kind": "opening_missed_in_b",
+     "room_a": "R1",
+     "id_a": "R1-O0",
+     "a": 0.997
+    },
+    {
+     "kind": "opening_missed_in_b",
+     "room_a": "R1",
+     "id_a": "R1-O1",
+     "a": 0.816
+    },
+    {
+     "kind": "opening_extra_in_b",
+     "room_b": "R1",
+     "id_b": "R1-O0",
+     "b": 0.67
+    },
+    {
+     "kind": "opening_extra_in_b",
+     "room_b": "R1",
+     "id_b": "R1-O1",
+     "b": 0.67
+    },
+    {
+     "kind": "opening_extra_in_b",
+     "room_b": "R1",
+     "id_b": "R1-O2",
+     "b": 1.88
+    },
+    {
+     "kind": "opening_extra_in_b",
+     "room_b": "R1",
+     "id_b": "R1-O3",
+     "b": 0.73
+    },
+    {
+     "kind": "opening_extra_in_b",
+     "room_b": "R1",
+     "id_b": "R1-O4",
+     "b": 0.716
+    },
+    {
+     "kind": "floor_area",
+     "room_a": "R2",
+     "room_b": "R3",
+     "a": 8.781,
+     "b": 5.081,
+     "diff": -3.7,
+     "rel": -0.42136430930417945,
+     "a_in_b_ci": true
+    },
+    {
+     "kind": "wall_length",
+     "room_a": "R2",
+     "room_b": "R3",
+     "id_a": "R2-W1",
+     "id_b": "R3-W4",
+     "a": 1.546,
+     "b": 1.04,
+     "observed": false,
+     "diff": -0.506,
+     "rel": -0.32729624838292365,
+     "a_in_b_ci": true
+    },
+    {
+     "kind": "wall_length",
+     "room_a": "R2",
+     "room_b": "R3",
+     "id_a": "R2-W2",
+     "id_b": "R3-W7",
+     "a": 1.859,
+     "b": 1.19,
+     "observed": false,
+     "diff": -0.669,
+     "rel": -0.3598708983324368,
+     "a_in_b_ci": true
+    },
+    {
+     "kind": "wall_length",
+     "room_a": "R2",
+     "room_b": "R3",
+     "id_a": "R2-W3",
+     "id_b": "R3-W8",
+     "a": 2.3,
+     "b": 0.9,
+     "observed": true,
+     "diff": -1.4,
+     "rel": -0.6086956521739131,
+     "a_in_b_ci": true
+    },
+    {
+     "kind": "wall_length",
+     "room_a": "R2",
+     "room_b": "R3",
+     "id_a": "R2-W4",
+     "id_b": "R3-W11",
+     "a": 3.03,
+     "b": 0.78,
+     "observed": true,
+     "diff": -2.25,
+     "rel": -0.7425742574257426,
+     "a_in_b_ci": false
+    },
+    {
+     "kind": "wall_length",
+     "room_a": "R2",
+     "room_b": "R3",
+     "id_a": "R2-W5",
+     "id_b": "R3-W2",
+     "a": 3.846,
+     "b": 0.812,
+     "observed": false,
+     "diff": -3.034,
+     "rel": -0.7888715548621944,
+     "a_in_b_ci": false
+    },
+    {
+     "kind": "opening_missed_in_b",
+     "room_a": "R2",
+     "id_a": "R2-O0",
+     "a": 0.955
+    },
+    {
+     "kind": "opening_missed_in_b",
+     "room_a": "R2",
+     "id_a": "R2-O1",
+     "a": 1.528
+    },
+    {
+     "kind": "opening_missed_in_b",
+     "room_a": "R2",
+     "id_a": "R2-O2",
+     "a": 0.669
+    },
+    {
+     "kind": "opening_extra_in_b",
+     "room_b": "R3",
+     "id_b": "R3-O0",
+     "b": 1.358
+    }
+   ],
+   "footprint_rel_err_pct": -25.8,
+   "footprint_lidar_in_ci": true,
+   "room_overlap_m2": 0.1505,
+   "rooms": [
+    5,
+    3
+   ],
+   "ate_m": 1.466,
+   "ate_pct_of_path": 2.73
+  },
+  "photo_vs_lidar:floor_only": {
+   "registration": {
+    "R": [
+     [
+      -1.0,
+      0.0098
+     ],
+     [
+      -0.0098,
+      -1.0
+     ]
+    ],
+    "t": [
+     2.287,
+     6.336
+    ],
+    "score": 0.179,
+    "yaw_deg": -179.44
+   },
+   "room_pairs": [],
+   "walls_compared": 0,
+   "wall_abs_err_cm_median": null,
+   "wall_rel_err_pct_median": null,
+   "wall_repeatable_pct": null,
+   "wall_within_3pct": null,
+   "wall_within_8pct": null,
+   "wall_ref_in_ci_pct": null,
+   "openings_matched": 0,
+   "openings_missed": 0,
+   "openings_phantom": 0,
+   "opening_within_2cm_pct": null,
+   "floor_area_rel_err_pct": [],
+   "ceiling_diff_cm": [],
+   "rows": [],
+   "footprint_rel_err_pct": -69.0,
+   "footprint_lidar_in_ci": false,
+   "room_overlap_m2": 0.2733,
+   "rooms": [
+    5,
+    3
+   ]
+  },
+  "video_vs_lidar:with_ceiling": {
+   "registration": {
+    "R": [
+     [
+      -0.016,
+      0.9999
+     ],
+     [
+      -0.9999,
+      -0.016
+     ]
+    ],
+    "t": [
+     -7.568,
+     9.331
+    ],
+    "score": 0.176,
+    "yaw_deg": -90.92
+   },
+   "room_pairs": [],
+   "walls_compared": 0,
+   "wall_abs_err_cm_median": null,
+   "wall_rel_err_pct_median": null,
+   "wall_repeatable_pct": null,
+   "wall_within_3pct": null,
+   "wall_within_8pct": null,
+   "wall_ref_in_ci_pct": null,
+   "openings_matched": 0,
+   "openings_missed": 0,
+   "openings_phantom": 0,
+   "opening_within_2cm_pct": null,
+   "floor_area_rel_err_pct": [],
+   "ceiling_diff_cm": [],
+   "rows": [],
+   "footprint_rel_err_pct": -6.5,
+   "footprint_lidar_in_ci": true,
+   "room_overlap_m2": 0.5219,
+   "rooms": [
+    5,
+    2
+   ],
+   "ate_m": 4.816,
+   "ate_pct_of_path": 4.87
+  },
+  "photo_vs_lidar:with_ceiling": {
+   "registration": {
+    "R": [
+     [
+      -0.1278,
+      0.9918
+     ],
+     [
+      -0.9918,
+      -0.1278
+     ]
+    ],
+    "t": [
+     0.246,
+     7.956
+    ],
+    "score": 0.2,
+    "yaw_deg": -97.35
+   },
+   "room_pairs": [],
+   "walls_compared": 0,
+   "wall_abs_err_cm_median": null,
+   "wall_rel_err_pct_median": null,
+   "wall_repeatable_pct": null,
+   "wall_within_3pct": null,
+   "wall_within_8pct": null,
+   "wall_ref_in_ci_pct": null,
+   "openings_matched": 0,
+   "openings_missed": 0,
+   "openings_phantom": 0,
+   "opening_within_2cm_pct": null,
+   "floor_area_rel_err_pct": [],
+   "ceiling_diff_cm": [],
+   "rows": [],
+   "footprint_rel_err_pct": -81.4,
+   "footprint_lidar_in_ci": false,
+   "room_overlap_m2": 0.0,
+   "rooms": [
+    5,
+    3
+   ]
   }
  },
  "notes": [
-  "depth weights not present: video and photo tiers not run"
+  "video/photo: each capture uses the depth scale fitted on the other captures (bench/calibrate_depth.py, leave-one-out)"
  ],
  "damage_staged": {
   "items": [
