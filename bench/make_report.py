@@ -12,6 +12,42 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
+
+
+def _video_ablation():
+    f = Path(__file__).resolve().parent / "results" / "video_ablation.md"
+    if not f.exists():
+        return "(run `python bench/video_ablation.py`)"
+    lines = f.read_text().splitlines()
+    i = next((k for k, l in enumerate(lines) if l.startswith("Means over")), None)
+    if i is None:
+        return ""
+    tbl = [l for l in lines[i + 1:] if l.startswith("|")]
+    return (lines[i] + " (full per-capture table: `bench/results/video_ablation.md`)\n\n" + "\n".join(tbl))
+
+def _thin_calibration():
+    """Depth-scale calibration + thin-tier interval scoring, from bench/results."""
+    import json as _j
+    R = Path(__file__).resolve().parent / "results"
+    out = ""
+    f = R / "depth_calibration.json"
+    if f.exists():
+        d = _j.loads(f.read_text())
+        per = ", ".join(f"{k} {v['ratio_median']}" for k, v in d["per_capture"].items())
+        out += (f" **Mono-depth scale (video/photo):** model depth / LiDAR depth = {per}; shipped correction "
+                f"{d['scale']}; each capture is benchmarked with the scale fitted on the other two (residual "
+                f"{', '.join(f'{k} {v:+.1f}%' for k, v in d['leave_one_out_scale_error_pct'].items())}).")
+    b = R / "benchmark.json"
+    if b.exists():
+        comp = _j.loads(b.read_text())["comparisons"]
+        thin = {k: v for k, v in comp.items() if k.startswith(("video_vs", "photo_vs"))}
+        if thin:
+            inci = sum(bool(v.get("footprint_lidar_in_ci")) for v in thin.values())
+            out += (f" Thin-tier intervals are set from those measurements (D24); the LiDAR footprint falls inside the "
+                    f"thin tier's 95% interval in {inci} of {len(thin)} runs — where it does not, the error is "
+                    "registration/odometry, which the interval does not claim to cover (§5).")
+    return out
+
 def fmt(x, nd=1, suf=""):
     return "—" if x is None else f"{x:.{nd}f}{suf}"
 
@@ -129,9 +165,10 @@ def main():
                 f"{c['gross_mismatch']} of {c['walls']}) and validates leave-one-pair-out: {loo}. Fitted per-face residual "
                 f"{100 * c['fitted']['face_floor']:.1f} cm (ambiguity weight {c['fitted']['ambiguity_k']}). "
                 "The intervals in every JSON are therefore the repeatability we can demonstrate, not the sensor spec. "
-                "Video/photo intervals use tier error models (scale 2% / 3.5%) that are priors until their benchmark rows exist."))
+                + _thin_calibration()))
         except Exception:
             pass
+    T = T.replace("{{VIDEO_ABLATION}}", _video_ablation())
     T = T.replace("{{CALIBRATION}}", "Calibration report not found; run bench/calibrate.py.")
     fl = (ROOT / "docs" / "FIX_LOOP.md").read_text()
     T = T.replace("{{FIXLOOP_SUMMARY}}", (

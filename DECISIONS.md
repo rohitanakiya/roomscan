@@ -161,7 +161,7 @@ absolute trajectory error after rigid alignment). Findings, each one measured:
 3. **Absolute rotation** from straight image lines (vertical vanishing direction + yaw scan + Gauss-Newton;
    the mono-depth normals are not square enough to define the frame — even ARKit's true rotation is "corrected"
    by 8–18° against them). Open doors and close-up fixtures mislead it; acceptance rules (vertical support,
-   both wall axes for large yaw corrections) help, but on floor_only it still doubles ATE. Kept, **off by
+   both wall axes for large yaw corrections) help, but on floor_only it still nearly doubles ATE (1.47 → 2.68 m). Kept, **off by
    default** (`ROOMSCAN_VIDEO_MW=1`), as are trusted-only fusion and a floor-normal veto, which made things worse.
 The default was chosen from `bench/results/video_ablation.md` by mean ATE over the captures every configuration
 ran on — the same captures the benchmark reports (there is no held-out video). Honest status: the video tier's
@@ -174,3 +174,11 @@ camera path is still metres off on a multi-room walk; its plans do not meet the 
   for memory (8 GB machine). Frames are now greyscale in memory, colour is read from disk for depth keyframes
   only, and depth is float16.
 - Photo inputs were regenerated from the final LiDAR plans and the post-D20 extractor before scoring.
+
+## D24. Thin-tier intervals from measurement, not from hope
+The video/photo error models were priors (2 % / 3.5 % scale). The measurements say otherwise: the depth-scale
+residual after leave-one-out calibration reaches 5.2 %, and the RGB-only camera path is off by 2.7–8 % of the
+distance walked. Video: scale 5 %, drift 1.5 %/m of path, face 3 cm. Photo: scale 5 %, face 4 cm. Registration
+failure in the photo tier (rooms stacked on each other) is *not* absorbed into an interval — the benchmark scores
+it and the report states it. Whether the LiDAR value falls inside the thin tier's 95 % interval is reported
+per capture (`footprint_lidar_in_ci`, `wall_ref_in_ci_pct`): that is the calibration score at every tier.

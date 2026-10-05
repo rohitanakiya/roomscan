@@ -22,8 +22,10 @@ from ..geometry.room import ErrorModel
 from ..scene import Scene
 from .video import FOCAL_PRIOR, depth_cloud, focal_from_vanishing_points, gravity_align
 
-PHOTO_ERRORS = ErrorModel(sensor_face=0.025, scale_rel=0.035, drift_per_m=0.004,
-                          ceiling_plane=0.03, unobserved_face=0.15, opening_jamb=0.04)
+# scale from the leave-one-out depth calibration (D24); registration error is not modelled - a failed stitch is
+# flagged in the JSON instead of being hidden inside a wide interval
+PHOTO_ERRORS = ErrorModel(sensor_face=0.040, scale_rel=0.050, drift_per_m=0.004,
+                          ceiling_plane=0.04, unobserved_face=0.20, opening_jamb=0.05)
 IMG_EXT = {".jpg", ".jpeg", ".png", ".heic"}
 WORK_LONG = 960
 

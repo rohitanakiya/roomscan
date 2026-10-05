@@ -24,8 +24,11 @@ import numpy as np
 from ..geometry.room import ErrorModel
 from ..scene import Scene
 
-VIDEO_ERRORS = ErrorModel(sensor_face=0.012, scale_rel=0.020, drift_per_m=0.0020,
-                          ceiling_plane=0.015, unobserved_face=0.08, opening_jamb=0.02)
+# From measurement (D24): scale = leave-one-out depth-scale residual (max 5.2 %, bench/results/depth_calibration.json);
+# drift = trajectory error vs ARKit per metre walked (2.7-8 %, bench/results/video_ablation.md), taken at 1.5 %/m
+# because walls are fitted from views close in time; face = per-frame mono-depth scale scatter on a 2-4 m wall.
+VIDEO_ERRORS = ErrorModel(sensor_face=0.030, scale_rel=0.050, drift_per_m=0.015,
+                          ceiling_plane=0.030, unobserved_face=0.15, opening_jamb=0.04)
 FOCAL_PRIOR = 0.83          # f / long-side (px); iPhone main camera, video mode with stabilisation crop
 WORK_W = 640
 
@@ -34,7 +37,7 @@ import os as _os
 
 # odometry components (D22); environment switches exist for the ablation in bench/video_ablation.py
 # Default = lowest mean ATE in bench/results/video_ablation.md: fast-turn bridging on, Manhattan rotation off (it
-# halves ATE on single_room but doubles it on floor_only, where doors and fixtures mislead the yaw)
+# cuts ATE by 40 % on single_room but nearly doubles it on floor_only, where doors and fixtures mislead the yaw)
 MANHATTAN_ROTATION = _os.environ.get("ROOMSCAN_VIDEO_MW", "0") == "1"      # absolute rotation from image lines
 GAP_BRIDGING = _os.environ.get("ROOMSCAN_VIDEO_GAP", "1") == "1"           # native-rate rotation over fast turns
 TRUSTED_ONLY = _os.environ.get("ROOMSCAN_VIDEO_TRUST", "1") == "1"         # fuse only trusted orientations
@@ -493,6 +496,7 @@ def build_scene(video, work: Path, fps=10.0, depth_every=3, depth_source=None, l
         vids = [f for f in video.iterdir() if f.suffix.lower() in {".mp4", ".mov", ".m4v"}]
         video = vids[0]
     work = Path(work)
+    cv2.setRNGSeed(0)                       # RANSAC (PnP, homography) repeatable run to run
     files = extract_frames(video, work / "frames", fps=fps)
     # greyscale in memory (tracking, lines); colour is read from disk for the depth keyframes only - a 3.5 min
     # walkthrough at 10 fps would otherwise need ~5 GB

@@ -10,7 +10,8 @@ iPhone, no access to the property and no laser. Consequences, stated once and ho
   (proven to be one flat by wall-map correlation, DECISIONS D6); video/photo numbers are reported against the
   LiDAR tier of the same capture. Nothing is called "accuracy" that is really agreement.
 - **Thin tiers are derived.** The video tier gets only `rgb.mp4` (upright, metadata stripped); the photo tier gets
-  2–8 EXIF-free stills per room picked the way the protocol tells a person to shoot.
+  2–8 EXIF-free stills per room picked the way the protocol tells a person to shoot. ARKit poses are never given to
+  them, but are used *afterwards* to score the video tier's camera path (§5).
 - **Damage is staged digitally** onto real wall planes and re-rendered through the capture's own poses (§6).
 - **Head-to-head** with a consumer app needs that app run in the same rooms: not possible here (§8).
 
@@ -39,8 +40,8 @@ contract from every tier" true by construction (`scene.py`, `analyze.py`, `expor
 | tier | front-end | scale source | intervals (1σ model, `tiers/*.py`) |
 |---|---|---|---|
 | LiDAR | Stray loader; RGB/depth frame offset estimated (D9); keyframes 10 cm / 8° | LiDAR | face 4 mm, scale 0.3%, drift 0.4 mm per m walked |
-| video | KLT chains at 10 fps between depth keyframes, PnP-RANSAC with metric mono-depth, ICP / constant-velocity fallback; focal from Manhattan vanishing points (536 vs 533 px true) | mono-depth (Depth Anything V2 metric-indoor) | face 12 mm, scale 2%, drift 2 mm/m |
-| photo | per photo: metric depth → gravity + Manhattan frame; 4 yaws × 2-D shift solved by FFT top-view correlation; rooms joined through doorway shots | mono-depth | face 25 mm, scale 3.5% |
+| video | KLT chains at 10 fps between depth keyframes, PnP-RANSAC with metric mono-depth; fast turns re-decoded at native rate; ICP / constant-velocity fallback; focal from Manhattan vanishing points (709 vs 711 px true) | mono-depth (Depth Anything V2 metric-indoor) × device scale calibrated on LiDAR (0.766) | face 30 mm, scale 5%, drift 1.5%/m walked (measured, D24) |
+| photo | per photo: metric depth → gravity + Manhattan frame; 4 yaws × 2-D shift solved by FFT top-view correlation; rooms joined through doorway shots | same as video | face 40 mm, scale 5% |
 
 Hardware: see `docs/DEVICE_MATRIX.md` (LiDAR tier needs a Pro iPhone; video/photo any iPhone 15+; processing on a
 2-core CPU laptop).
@@ -60,6 +61,14 @@ scale; opening width = jamb spread ⊕ sensor ⊕ scale. Unobserved quantities g
 
 ## 5. Results
 {{RESULTS_TABLES}}
+
+### Video odometry, measured against ARKit
+The video tier's plans disagreed with LiDAR, so its RGB-only camera path was scored against the ARKit poses it
+never sees (`bench/video_odometry.py`). Three causes, each confirmed by measurement (DECISIONS D22): the depth model
+reads 1.26–1.35× too far (fixed by a per-device scale, leave-one-out in the benchmark); 17% of 0.3 s steps lose
+every track in fast turns (re-decoded at the native frame rate); rotation drifts between those gaps. Absolute
+rotation from image lines was built and ablated — doors and close-up fixtures mislead it, so it ships off.
+{{VIDEO_ABLATION}}
 
 ## 6. Calibration
 {{CALIBRATION}}
@@ -85,3 +94,7 @@ converted to our JSON drops straight in).
   face exists behind it; a full-height wardrobe is indistinguishable from a wall.
 - **Open-plan junctions** (> 1.25 m): consistently merged into one room — a homeowner may draw two.
 - **Ceiling never looked at**: reported as a prior, not a measurement.
+- **Fast camera turns (video)**: tracking at 10 fps breaks; the gap is re-decoded at the native frame rate, but turns
+  of 40°+ in 0.3 s still fall back to constant velocity (counted in `capture.odometry`).
+- **Few photos per room (photo)**: top-view correlation needs overlapping structure; rooms with little overlap
+  are placed on top of each other — the whole-property footprint is then far too small (§5).

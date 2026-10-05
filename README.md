@@ -13,7 +13,7 @@ Output per capture (`out/<name>/`): `result.json` (schema: `schema/output.schema
 
 ## Quick start (clean machine, < 15 min)
 
-Requirements: Python 3.10–3.13, `ffmpeg` on PATH. ~1.5 GB disk for dependencies.
+Requirements: Python 3.10–3.12 (open3d has no 3.13+ wheels on Windows), `ffmpeg` on PATH. ~1.5 GB disk for dependencies.
 
 ```bash
 git clone <this repo> roomscan && cd roomscan
@@ -40,10 +40,15 @@ How to capture: **[docs/CAPTURE_PROTOCOL.md](docs/CAPTURE_PROTOCOL.md)** (one pa
 ## Reproduce every reported number
 
 ```bash
-python scripts/get_sample_data.py      # or place the three Stray captures in data/raw/{single_room,floor_only,with_ceiling}
+# unzip the three provided Stray exports to data/raw/single_room (c00a170fe1), data/raw/floor_only (1a8384c3f6),
+# data/raw/with_ceiling (c7d28f72c6); checksums of what we used are in docs/DATA.md
+python -m roomscan data/raw/<capture> --out out/bench/lidar/<capture>                                  # LiDAR plans
 python scripts/make_tier_inputs.py data/raw/<capture> out/bench/lidar/<capture>/result.json data/tiers   # video/photo inputs
-python bench/stage_damage.py data/raw/single_room data/staged/single_room_staged                       # staged damage
+python bench/stage_damage.py data/raw/single_room data/staged/single_room_staged largest               # staged damage (furnished room)
+python bench/calibrate_depth.py        # mono-depth scale vs LiDAR (per capture + leave-one-out), video/photo only
 python bench/run_benchmark.py --force  # all tiers, all captures, ablations, comparisons
+python bench/video_ablation.py         # video odometry components vs ARKit (optional, ~1 h on 2 cores)
+python bench/make_report.py && bash scripts/build_report_pdf.sh   # report tables + PDF from the results
 ```
 
 `bench/results/BENCHMARK.md` and `benchmark.json` are regenerated; the technical report's tables are copied from them.
@@ -71,7 +76,10 @@ DECISIONS.md            design-decision log (each with the evidence that drove i
 - The sample data has **no laser ground truth**: LiDAR numbers are reported as repeatability between three
   captures of the same flat; video/photo numbers are reported against the LiDAR tier of the same capture.
 - No consumer-app export exists for the sample rooms, so the head-to-head table cannot be filled from sample data.
-- Photo tier: rooms are under-sized when photos see little of each room; intervals are calibrated to that.
+- Video tier: the RGB-only camera path is still 1–3 m off ARKit over a multi-room walk (fast turns, doors);
+  footprints land within −6 % to +40 % of LiDAR, not the ±3 % target (`bench/results/video_ablation.md`).
+- Photo tier: the top-view correlation stitch stacks rooms onto each other; whole-property footprints are
+  70–80 % short. Reported, not hidden: see the thin-tier table in `bench/results/BENCHMARK.md`.
 - Mirrors / glass shower screens corrupt surface colour maps (damage detection there is unreliable).
 
 Pretrained model disclosure: Depth Anything V2 Metric-Indoor Small (Apache-2.0), used by video/photo tiers only.
