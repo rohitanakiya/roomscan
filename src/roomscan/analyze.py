@@ -91,14 +91,63 @@ def analyze(scene, P: LayoutParams | None = None, log=print) -> Property:
     U = unary_union(polys) if polys else None
     fp_area = float(U.area) if U is not None else 0.0
     fp_sigma = float(np.sqrt(sum(r.floor_area.sigma ** 2 for r in rooms))) if rooms else 0.0
-    footprint = combine(fp_area, unit="m2", rooms=fp_sigma)
     overlaps = 0.0
     for i in range(len(polys)):
         for j in range(i + 1, len(polys)):
             overlaps += polys[i].intersection(polys[j]).area
+    stitch = None
+    if scene.groups:
+        stitch = photo_stitch_check(scene, F, R, rooms, overlaps)
+        if not stitch["reliable"]:
+            warnings.append("photo stitch unreliable: " + "; ".join(stitch["reasons"]) +
+                            " - footprint and room areas widened (D27); do not use as a plan")
+            log("  " + warnings[-1])
+    footprint = combine(fp_area, unit="m2", rooms=fp_sigma,
+                        stitch=(stitch["folder_area_sum_m2"] if stitch and not stitch["reliable"] else None))
+    if stitch and not stitch["reliable"]:
+        footprint.note = "photo stitch failed its self-check: value is the stitched plan, interval covers the rooms' own areas"
     return Property(scene.tier, F, rooms, adjacency, R, labels, footprint,
                     meta=dict(room_overlap_m2=round(overlaps, 4), q_points=len(q),
-                              wall_sharpness=wall_sharpness(q, nq, rooms), warnings=warnings))
+                              wall_sharpness=wall_sharpness(q, nq, rooms), warnings=warnings, stitch=stitch))
+
+
+def photo_stitch_check(scene, F, R, rooms, overlap_m2, max_overlap_m2=0.1):
+    """Self-check of the photo tier's whole-property stitch, from its own data only (D27).
+
+    Failure signs: a room folder that produced no room (its floor was absorbed by another folder = rooms placed
+    on top of each other) and overlapping room outlines (the brief's own gate). On failure every room's floor area
+    and the footprint get a 'stitch' error term equal to the floor area that folder (or all folders) saw on its own:
+    the stitched plan cannot say where that area really is. Folder-overlap ratio alone does not discriminate
+    (13-46 % even with true camera poses: doorway shots look into the next room), so it is reported, not used.
+    """
+    from .combine_utils import add_term
+    from .geometry.layout import visibility_raster
+
+    G = R.grid
+    folder_area = {}
+    masks = []
+    for rname, idx in scene.groups:
+        m = visibility_raster([scene.views[i] for i in idx], F, G) & R.free
+        masks.append(m)
+        folder_area[rname] = round(float(m.sum() * G.res ** 2), 2)
+    union = float(np.any(masks, 0).sum() * G.res ** 2) if masks else 0.0
+    total = float(sum(folder_area.values()))
+    named = {r.meta.get("name") for r in rooms}
+    missing = [n for n in folder_area if n not in named]
+    reasons = []
+    if missing:
+        reasons.append(f"{len(missing)} of {len(folder_area)} room folders produced no room ({', '.join(missing)})")
+    if overlap_m2 > max_overlap_m2:
+        reasons.append(f"room outlines overlap by {overlap_m2:.2f} m2")
+    reliable = not reasons
+    if not reliable:
+        for r in rooms:
+            a = folder_area.get(r.meta.get("name"))
+            if a:
+                r.floor_area = add_term(r.floor_area, stitch=a, note="photo stitch unreliable (D27)")
+    return dict(reliable=reliable, reasons=reasons, room_folders=len(folder_area), rooms_in_plan=len(rooms),
+                folder_area_m2=folder_area, folder_area_sum_m2=round(total, 2), folder_union_m2=round(union, 2),
+                folder_overlap_ratio=round(1 - union / total, 3) if total else None)
 
 
 def mirror_check(rooms, q, log=print, tol=0.04, frac=0.6):

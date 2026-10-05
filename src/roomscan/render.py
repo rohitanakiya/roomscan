@@ -122,7 +122,10 @@ def render_plan(result: dict, path_png: str, path_svg: str | None = None, title:
     cap = result["capture"]
     t = title or f"{cap.get('tier', '').upper()} tier — {len(rooms)} rooms — footprint {fp['value']:.1f} m² " \
                  f"[{fp['ci95'][0]:.1f}, {fp['ci95'][1]:.1f}]"
-    ax.set_title(t, fontsize=11)
+    st = result["property"].get("photo_stitch")
+    if st and not st.get("reliable", True) and not title:
+        t += "\nSTITCH UNRELIABLE - rooms may be placed on top of each other; see warnings"
+    ax.set_title(t, fontsize=11, color="#b00020" if st and not st.get("reliable", True) else "black")
     fig.tight_layout()
     fig.savefig(path_png, dpi=160)
     if path_svg:

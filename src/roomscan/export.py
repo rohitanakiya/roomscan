@@ -106,6 +106,7 @@ def property_to_json(prop, scene, extra=None):
             adjacency=prop.adjacency,
             drift=scene.meta.get("drift"),
             wall_sharpness=prop.meta.get("wall_sharpness"),
+            **({"photo_stitch": prop.meta["stitch"]} if prop.meta.get("stitch") else {}),
         ),
         rooms=rooms_js,
         warnings=prop.meta.get("warnings", []) + scene.meta.get("warnings", []),

@@ -105,7 +105,9 @@
         "rooms_count": {"type": "integer"},
         "room_overlap_m2": {"type": "number"},
         "adjacency": {"type": "array", "items": {"type": "object", "required": ["rooms", "via"]}},
-        "drift": {"type": ["object", "null"]}
+        "drift": {"type": ["object", "null"]},
+        "photo_stitch": {"type": "object", "description": "photo tier only: stitch self-check (reliable, reasons, per-folder floor areas)",
+                         "required": ["reliable", "reasons"]}
       }
     },
     "rooms": {

@@ -205,3 +205,23 @@ reviewer would have had to go and install. Every ffmpeg call now goes through `r
 the system ffmpeg if there is one, else the static build from the `imageio-ffmpeg` wheel (added to
 requirements). A dead `ffprobe` helper was removed (ffmpeg auto-rotates on decode), so no ffprobe is needed.
 Checked: the LiDAR single_room run with only the bundled ffmpeg reproduces the benchmark (23.118 m², 2 damage regions).
+
+## D27. The photo tier must say when its stitch failed
+Re-reading the brief: "calibration is scored at every tier and confident garbage on thin input caps your total
+score". Our photo plans were 69–81 % too small with a ±25 % interval — the LiDAR footprint was inside it 0/3 times.
+That is exactly confident garbage. The photo tier now checks its own stitch, using only its own data: a room folder
+that produced no room (its floor was taken over by another folder: rooms stacked) or overlapping room outlines (the
+brief's own gate) mark the stitch `reliable: false`. Then each room's floor area and the footprint get a `stitch`
+error term equal to the floor area that folder (or all folders) saw on its own, the plan title says
+"STITCH UNRELIABLE", and a warning explains why. The threshold is not fitted to LiDAR. We also measured the folder
+overlap ratio as a candidate signal and rejected it: with the true camera poses it is already 13–46 % (doorway shots
+look into the next room) against 51–55 % for the failed stitches — too close to separate. Result: the stitch still
+fails the ±8 % gate on all three captures, but the LiDAR footprint is now inside the photo interval 3/3, and the
+output says not to use it as a plan.
+
+## D28. iPhone photos are HEIC by default
+Preparing the iPhone 16 capture: the Camera app saves HEIC unless "Most Compatible" is chosen, and OpenCV cannot
+read HEIC — the photo tier would have skipped every photo and crashed. Images now load through
+`photo.read_image` (OpenCV for JPEG/PNG; Pillow + pillow-heif for HEIC, with the EXIF orientation applied), and an
+empty folder set stops with a clear message. Checked with a rotation-tagged HEIC made from one of our JPEGs (mean
+pixel difference 0.03 after decoding).
