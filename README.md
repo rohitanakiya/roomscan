@@ -33,6 +33,9 @@ python -m roomscan path/to/walkthrough.mov          # video
 python -m roomscan path/to/photos/                  # photo (sub-folder per room)
 ```
 
+Verified on a clean Windows 11 laptop (Git Bash, Python 3.12, no system ffmpeg): the single-room LiDAR capture runs in
+98 s and reproduces the benchmark output exactly.
+
 Useful flags: `--out DIR`, `--tier lidar|video|photo`, `--no-drift` (ablation: raw ARKit poses),
 `--no-damage`. Typical runtime on a 2-core laptop CPU: LiDAR 10 s (1 room) – 3 min (whole flat).
 

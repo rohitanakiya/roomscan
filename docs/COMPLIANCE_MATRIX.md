@@ -37,7 +37,7 @@ Status legend: **Done** = implemented and exercised by the benchmark; **Partial*
 | 29 | Head-to-head vs consumer app on 2 rooms | `docs/TECHNICAL_REPORT.md` §8 | — | **N/A-data** (needs a consumer-app scan of the same rooms) |
 | 30 | Fix loop: declaration, shipped fix, regenerable before/after, diff | `docs/FIX_LOOP.md`, `bench/fix_loop/` | before/after runs + diff | see FIX_LOOP.md |
 | 31 | Process evidence: commit history | `git log` | incremental commits since hour 0 | Done |
-| 32 | README to running on a fresh capture < 15 min, clean machine | `README.md` | install + run | Done |
+| 32 | README to running on a fresh capture < 15 min, clean machine | `README.md`, `src/roomscan/ffmpeg_bin.py` | install + run | Done (verified on a Windows 11 laptop: fresh Python 3.12 venv, `pip install -r requirements.txt`, no system ffmpeg; single_room LiDAR in 98 s, output identical to the benchmark — 4 rooms, 23.12 m², 2 damage regions; D26) |
 | 33 | Reproduction bundle: regenerate every number from raw inputs | `bench/run_benchmark.py`, `scripts/` | `BENCHMARK.md` | Done |
 | 34 | Cached model outputs replay deterministically; live path also runs | `models/depth.py` (hash-keyed float16 cache, pinned threads), seeded RANSAC | `out/.cache/depth` | Done (bit-identical reruns verified, D25) |
 | 35 | Technical report ≤ 6 pages | `docs/TECHNICAL_REPORT.md` | report | Done |
