@@ -16,7 +16,7 @@ import time
 from pathlib import Path
 
 VIDEO_EXT = {".mp4", ".mov", ".m4v"}
-IMG_EXT = {".jpg", ".jpeg", ".png", ".heic"}
+IMG_EXT = {".jpg", ".jpeg", ".png", ".heic", ".heif"}
 
 
 def detect_tier(p: Path) -> str:

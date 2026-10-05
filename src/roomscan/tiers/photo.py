@@ -26,13 +26,41 @@ from .video import FOCAL_PRIOR, depth_cloud, focal_from_vanishing_points, gravit
 # flagged in the JSON instead of being hidden inside a wide interval
 PHOTO_ERRORS = ErrorModel(sensor_face=0.040, scale_rel=0.050, drift_per_m=0.004,
                           ceiling_plane=0.04, unobserved_face=0.20, opening_jamb=0.05)
-IMG_EXT = {".jpg", ".jpeg", ".png", ".heic"}
+IMG_EXT = {".jpg", ".jpeg", ".png", ".heic", ".heif"}
 WORK_LONG = 960
+
+
+def _register_heif():
+    try:
+        import pillow_heif
+
+        pillow_heif.register_heif_opener()
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def read_image(path):
+    """BGR image with the camera's orientation applied. iPhones save HEIC by default, which OpenCV cannot read:
+    those (and anything else OpenCV refuses) go through Pillow + pillow-heif (D28)."""
+    im = cv2.imread(str(path)) if Path(path).suffix.lower() not in (".heic", ".heif") else None
+    if im is not None:
+        return im                                   # cv2 applies the EXIF orientation of JPEGs itself
+    try:
+        from PIL import Image, ImageOps
+
+        _register_heif()
+        with Image.open(path) as pi:
+            pi = ImageOps.exif_transpose(pi).convert("RGB")
+            return cv2.cvtColor(np.asarray(pi), cv2.COLOR_RGB2BGR)
+    except Exception:  # noqa: BLE001
+        return None
 
 
 def _exif_focal(path, long_side):
     try:
         from PIL import Image
+
+        _register_heif()
 
         ex = Image.open(path).getexif()
         sub = ex.get_ifd(0x8769)
@@ -94,8 +122,9 @@ def build_scene(root, work: Path, depth_source=None, log=print) -> Scene:
     imgs, names, room_of, Ks = [], [], [], []
     for ri, (rname, files) in enumerate(folders):
         for f in files:
-            im = cv2.imread(str(f))
+            im = read_image(f)
             if im is None:
+                log(f"  photo: cannot read {f.name}; skipped")
                 continue
             s = WORK_LONG / max(im.shape[:2])
             im = cv2.resize(im, (int(im.shape[1] * s), int(im.shape[0] * s)), interpolation=cv2.INTER_AREA)
@@ -104,6 +133,8 @@ def build_scene(root, work: Path, depth_source=None, log=print) -> Scene:
             room_of.append(ri)
             fe = _exif_focal(f, WORK_LONG)
             Ks.append(fe)
+    if not imgs:
+        raise SystemExit(f"no readable photos under {root} (expected one sub-folder per room with .jpg/.heic files)")
     room_of = np.array(room_of)
     h0, w0 = imgs[0].shape[:2]
     f0 = FOCAL_PRIOR * WORK_LONG
