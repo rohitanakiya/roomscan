@@ -120,6 +120,13 @@ def build_room(label, mask, rasters, labels, q, nq, P: LayoutParams, E: ErrorMod
                         forbid=_forbid_fn(o, ta, tb, -inward, labels, label, rasters.grid))
         S.append(dict(o=o, coord=fit.coord, fit=fit))
     S = _simplify(S, P.min_edge)
+    # snapping faces independently can make a short jog's neighbours cross (self-intersecting outline, seen on
+    # the photo tier); drop progressively longer jogs until the outline is a simple polygon
+    from shapely.geometry import Polygon as _Poly
+    me = P.min_edge
+    while len(S) > 4 and not _Poly(_corners([[d["o"], d["coord"], 0.0] for d in S])).is_valid and me < 2.0:
+        me *= 1.5
+        S = _simplify(S, me)
     segs = [[d["o"], d["coord"], 0.0] for d in S]
     fits = []
     corners = _corners(segs)

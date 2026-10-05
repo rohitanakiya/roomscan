@@ -12,6 +12,7 @@ import sys
 import numpy as np
 from scipy.signal import fftconvolve
 from shapely.geometry import Polygon
+from shapely.validation import make_valid
 
 RES = 0.05
 
@@ -88,10 +89,10 @@ def register(res_a, res_b):
 def match_rooms(res_a, res_b, R, t, min_iou=0.4):
     pairs = []
     for ra in res_a["rooms"]:
-        pa = Polygon(ra["polygon"])
+        pa = make_valid(Polygon(ra["polygon"]))
         best = None
         for rb in res_b["rooms"]:
-            pb = Polygon(np.array(rb["polygon"]) @ R.T + t)
+            pb = make_valid(Polygon(np.array(rb["polygon"]) @ R.T + t))   # thin tiers can emit self-touching outlines
             inter = pa.intersection(pb).area
             iou = inter / max(pa.union(pb).area, 1e-9)
             if iou >= min_iou and (best is None or iou > best[1]):
