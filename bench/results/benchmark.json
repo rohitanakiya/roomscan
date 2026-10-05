@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-05 05:21:27",
+ "generated": "2026-10-05 07:09:59",
  "runs": {
   "lidar/single_room": {
    "rooms": 4,
@@ -220,21 +220,23 @@
    "footprint": {
     "value": 7.108,
     "ci95": [
-     5.324,
-     8.892
+     0.0,
+     50.696
     ],
-    "sigma": 0.91,
+    "sigma": 22.239,
     "unit": "m2",
     "observed": true,
     "error_budget_1sigma": {
-     "rooms": 0.91
-    }
+     "rooms": 0.91,
+     "stitch": 22.22
+    },
+    "note": "photo stitch failed its self-check: value is the stitched plan, interval covers the rooms' own areas"
    },
    "drift": null,
    "timing": {
-    "reconstruct_s": 28.1,
-    "layout_s": 0.5,
-    "total_s": 29.0
+    "reconstruct_s": 31.6,
+    "layout_s": 0.6,
+    "total_s": 32.6
    },
    "wall_sharpness": 0.1933,
    "room_overlap_m2": 0.3735
@@ -275,21 +277,23 @@
    "footprint": {
     "value": 19.746,
     "ci95": [
-     15.374,
-     24.119
+     0.0,
+     106.391
     ],
-    "sigma": 2.231,
+    "sigma": 44.206,
     "unit": "m2",
     "observed": true,
     "error_budget_1sigma": {
-     "rooms": 2.231
-    }
+     "rooms": 2.231,
+     "stitch": 44.15
+    },
+    "note": "photo stitch failed its self-check: value is the stitched plan, interval covers the rooms' own areas"
    },
    "drift": null,
    "timing": {
-    "reconstruct_s": 32.5,
-    "layout_s": 0.7,
-    "total_s": 33.6
+    "reconstruct_s": 36.6,
+    "layout_s": 0.8,
+    "total_s": 37.8
    },
    "wall_sharpness": 0.5466,
    "room_overlap_m2": 0.2733
@@ -330,21 +334,23 @@
    "footprint": {
     "value": 12.643,
     "ci95": [
-     9.881,
-     15.406
+     0.0,
+     86.705
     ],
-    "sigma": 1.409,
+    "sigma": 37.786,
     "unit": "m2",
     "observed": true,
     "error_budget_1sigma": {
-     "rooms": 1.409
-    }
+     "rooms": 1.409,
+     "stitch": 37.76
+    },
+    "note": "photo stitch failed its self-check: value is the stitched plan, interval covers the rooms' own areas"
    },
    "drift": null,
    "timing": {
-    "reconstruct_s": 36.9,
-    "layout_s": 0.6,
-    "total_s": 37.9
+    "reconstruct_s": 39.4,
+    "layout_s": 0.7,
+    "total_s": 40.5
    },
    "wall_sharpness": 0.308,
    "room_overlap_m2": 0.0
@@ -390,9 +396,9 @@
    "total_s": 46.0
   },
   "photo/single_room": {
-   "reconstruct_s": 28.1,
-   "layout_s": 0.5,
-   "total_s": 29.0
+   "reconstruct_s": 31.6,
+   "layout_s": 0.6,
+   "total_s": 32.6
   },
   "video/floor_only": {
    "reconstruct_s": 195.9,
@@ -400,9 +406,9 @@
    "total_s": 204.5
   },
   "photo/floor_only": {
-   "reconstruct_s": 32.5,
-   "layout_s": 0.7,
-   "total_s": 33.6
+   "reconstruct_s": 36.6,
+   "layout_s": 0.8,
+   "total_s": 37.8
   },
   "video/with_ceiling": {
    "reconstruct_s": 384.0,
@@ -410,9 +416,9 @@
    "total_s": 403.4
   },
   "photo/with_ceiling": {
-   "reconstruct_s": 36.9,
-   "layout_s": 0.6,
-   "total_s": 37.9
+   "reconstruct_s": 39.4,
+   "layout_s": 0.7,
+   "total_s": 40.5
   }
  },
  "comparisons": {
@@ -2189,7 +2195,7 @@
    "ceiling_diff_cm": [],
    "rows": [],
    "footprint_rel_err_pct": -69.3,
-   "footprint_lidar_in_ci": false,
+   "footprint_lidar_in_ci": true,
    "room_overlap_m2": 0.3735,
    "rooms": [
     4,
@@ -2532,7 +2538,7 @@
    "ceiling_diff_cm": [],
    "rows": [],
    "footprint_rel_err_pct": -69.0,
-   "footprint_lidar_in_ci": false,
+   "footprint_lidar_in_ci": true,
    "room_overlap_m2": 0.2733,
    "rooms": [
     5,
@@ -2618,7 +2624,7 @@
    "ceiling_diff_cm": [],
    "rows": [],
    "footprint_rel_err_pct": -81.4,
-   "footprint_lidar_in_ci": false,
+   "footprint_lidar_in_ci": true,
    "room_overlap_m2": 0.0,
    "rooms": [
     5,

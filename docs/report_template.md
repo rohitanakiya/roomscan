@@ -97,4 +97,6 @@ converted to our JSON drops straight in).
 - **Fast camera turns (video)**: tracking at 10 fps breaks; the gap is re-decoded at the native frame rate, but turns
   of 40°+ in 0.3 s still fall back to constant velocity (counted in `capture.odometry`).
 - **Few photos per room (photo)**: top-view correlation needs overlapping structure; rooms with little overlap
-  are placed on top of each other — the whole-property footprint is then far too small (§5).
+  are placed on top of each other — the whole-property footprint is then far too small (§5). The tier detects this
+  itself (a room folder absorbed by another, or overlapping outlines), flags the plan "stitch unreliable" and widens
+  its intervals instead of reporting confident garbage (D27).

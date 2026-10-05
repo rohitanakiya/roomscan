@@ -1,6 +1,6 @@
 # Benchmark results
 
-Generated 2026-10-05 05:21:27 by `python bench/run_benchmark.py`. No laser ground truth exists for the sample data; 'reference' below is another capture or the LiDAR tier of the same capture, as stated per table.
+Generated 2026-10-05 07:09:59 by `python bench/run_benchmark.py`. No laser ground truth exists for the sample data; 'reference' below is another capture or the LiDAR tier of the same capture, as stated per table.
 
 > NOTE: video/photo: each capture uses the depth scale fitted on the other captures (bench/calibrate_depth.py, leave-one-out)
 
@@ -15,11 +15,11 @@ Generated 2026-10-05 05:21:27 by `python bench/run_benchmark.py`. No laser groun
 | lidar/with_ceiling | 5 | 68.10 [65.46, 70.74] | 0.4625 | 10.2 → 3.3 | 68 | 763.3 |
 | lidar/with_ceiling/no_drift | 4 | 70.77 [68.05, 73.50] | 0.3541 | — | — | 50.6 |
 | video/single_room | 1 | 32.02 [22.06, 41.98] | 0.2459 | — | — | 46.0 |
-| photo/single_room | 3 | 7.11 [5.32, 8.89] | 0.1933 | — | — | 29.0 |
+| photo/single_room | 3 | 7.11 [0.00, 50.70] | 0.1933 | — | — | 32.6 |
 | video/floor_only | 3 | 47.31 [19.11, 75.51] | 0.1653 | — | — | 204.5 |
-| photo/floor_only | 3 | 19.75 [15.37, 24.12] | 0.5466 | — | — | 33.6 |
+| photo/floor_only | 3 | 19.75 [0.00, 106.39] | 0.5466 | — | — | 37.8 |
 | video/with_ceiling | 2 | 63.68 [0.00, 139.99] | 0.2148 | — | — | 403.4 |
-| photo/with_ceiling | 3 | 12.64 [9.88, 15.41] | 0.308 | — | — | 37.9 |
+| photo/with_ceiling | 3 | 12.64 [0.00, 86.70] | 0.308 | — | — | 40.5 |
 
 ## Comparisons
 
@@ -43,11 +43,11 @@ Generated 2026-10-05 05:21:27 by `python bench/run_benchmark.py`. No laser groun
 | comparison | rooms LiDAR/tier | footprint err % | LiDAR footprint in tier 95% CI | room overlap m² | walls compared | walls within 3% | walls within 8% | camera path ATE vs ARKit m (% of path) |
 |---|---|---|---|---|---|---|---|---|
 | video_vs_lidar:single_room | 4/1 | 38.5 | True | 0.0 | 0 | — | — | 1.099 (7.75%) |
-| photo_vs_lidar:single_room | 4/3 | -69.3 | False | 0.3735 | 0 | — | — | — |
+| photo_vs_lidar:single_room | 4/3 | -69.3 | True | 0.3735 | 0 | — | — | — |
 | video_vs_lidar:floor_only | 5/3 | -25.8 | True | 0.1505 | 5 | 0.0 | 20.0 | 1.466 (2.73%) |
-| photo_vs_lidar:floor_only | 5/3 | -69.0 | False | 0.2733 | 0 | — | — | — |
+| photo_vs_lidar:floor_only | 5/3 | -69.0 | True | 0.2733 | 0 | — | — | — |
 | video_vs_lidar:with_ceiling | 5/2 | -6.5 | True | 0.5219 | 0 | — | — | 4.816 (4.87%) |
-| photo_vs_lidar:with_ceiling | 5/3 | -81.4 | False | 0.0 | 0 | — | — | — |
+| photo_vs_lidar:with_ceiling | 5/3 | -81.4 | True | 0.0 | 0 | — | — | — |
 
 Walls are compared only inside room pairs that overlap with IoU ≥ 0.4; where a thin tier merges or misplaces rooms there is nothing to compare, which is itself the result.
 
@@ -79,8 +79,8 @@ recall 1.00, false positives 1, clean-capture false positives 2
 | lidar/with_ceiling | 403.3 | 13.8 | 345.9 | 763.3 |
 | lidar/with_ceiling/no_drift | 36.6 | 13.6 |  | 50.6 |
 | video/single_room | 44.4 | 1.3 |  | 46.0 |
-| photo/single_room | 28.1 | 0.5 |  | 29.0 |
+| photo/single_room | 31.6 | 0.6 |  | 32.6 |
 | video/floor_only | 195.9 | 8.3 |  | 204.5 |
-| photo/floor_only | 32.5 | 0.7 |  | 33.6 |
+| photo/floor_only | 36.6 | 0.8 |  | 37.8 |
 | video/with_ceiling | 384.0 | 19.0 |  | 403.4 |
-| photo/with_ceiling | 36.9 | 0.6 |  | 37.9 |
+| photo/with_ceiling | 39.4 | 0.7 |  | 40.5 |

@@ -8,8 +8,8 @@ Status legend: **Done** = implemented and exercised by the benchmark; **Partial*
 |---|---|---|---|---|
 | 1 | Capture route: TestFlight build **or** one-page stock-capture protocol | `docs/CAPTURE_PROTOCOL.md` | Route 2 protocol (Stray Scanner + Camera app) | Done |
 | 2 | Device matrix: tier → hardware → honest accuracy | `docs/DEVICE_MATRIX.md`, `bench/results/BENCHMARK.md` | table | Done |
-| 3 | Photo tier: 2–8 stills/room, any iPhone 15+, no depth/poses | `src/roomscan/tiers/photo.py`, `tiers/photo_reg.py` | `python -m roomscan <photo_root>` | Partial (runs end-to-end on all 3 captures; footprints 69–81 % short — stitch stacks rooms; BENCHMARK.md) |
-| 4 | Photo tier produces the **stitched whole-property plan** | `tiers/photo_reg.py::register_blocks`, `render.py` | `plan.png` per photo run | Partial (a stitched plan is produced; rooms overlap/stack — see row 27) |
+| 3 | Photo tier: 2–8 stills/room, any iPhone 15+, no depth/poses | `src/roomscan/tiers/photo.py`, `tiers/photo_reg.py` | `python -m roomscan <photo_root>` | Partial (runs end-to-end on all 3 captures, JPEG or HEIC; footprints 69–81 % short — stitch stacks rooms, which the tier now detects and flags itself, D27) |
+| 4 | Photo tier produces the **stitched whole-property plan** | `tiers/photo_reg.py::register_blocks`, `render.py` | `plan.png` per photo run | Partial (a stitched plan is produced and self-checked; on our captures it fails the check and says so — see row 27) |
 | 5 | Video tier: handheld walkthrough clip | `src/roomscan/tiers/video.py`, `bench/video_odometry.py`, `bench/video_ablation.py` | `python -m roomscan <video>` | Done (runs on all 3 captures; camera path scored vs ARKit; ablation of odometry components) |
 | 6 | LiDAR tier: depth, poses, intrinsics | `src/roomscan/tiers/lidar.py`, `io/stray.py` | `python -m roomscan <stray_export>` | Done |
 | 7 | Same output contract from every tier | `src/roomscan/scene.py`, `analyze.py`, `export.py`, `schema/output.schema.json` | JSON validated by `tests/test_contract.py` | Done |
@@ -32,8 +32,8 @@ Status legend: **Done** = implemented and exercised by the benchmark; **Partial*
 | 24 | Gate: ceiling ≤1.5 cm; repeat spread ≤1 cm; biased vs unrepeatable stated | `bench/run_benchmark.py`, report §5 | ceilings table | Partial (only one capture observes ceilings) |
 | 25 | Gate: repeatability ≤1 cm or 0.5% per wall | `bench/compare.py` | `wall_repeatable_pct` | see BENCHMARK.md |
 | 26 | Gate: drift accountability + on/off ablation of stitched footprint | `geometry/drift.py`, `--no-drift`, report §3, `bench/drift_tuning.md` | ablation rows `*/no_drift` (footprint, wall sharpness, loop residual) | Done |
-| 27 | Gate: photo-tier whole-property stitch, no overlaps, footprint ±8% | `tiers/photo_reg.py` | `photo_vs_lidar:*` rows | **Fail** (footprint −69 / −69 / −81 %; overlaps 0–0.37 m²) |
-| 28 | Photo ±8% / video ±3% wall lengths, calibration scored at every tier | `bench/compare.py` (`a_in_b_ci`), `run_benchmark.py` (`footprint_lidar_in_ci`) | `wall_ref_in_ci_pct`, `footprint_lidar_in_ci` | **Fail** on accuracy (video footprint +38 / −26 / −6.5 %); calibration scored at every tier: LiDAR footprint inside the video interval 3/3, photo 0/3 |
+| 27 | Gate: photo-tier whole-property stitch, no overlaps, footprint ±8% | `tiers/photo_reg.py` | `photo_vs_lidar:*` rows | **Fail** (footprint −69 / −69 / −81 %; overlaps 0–0.37 m²); the failure is detected by the tier itself and the intervals cover the LiDAR footprint 3/3 (D27) |
+| 28 | Photo ±8% / video ±3% wall lengths, calibration scored at every tier | `bench/compare.py` (`a_in_b_ci`), `run_benchmark.py` (`footprint_lidar_in_ci`) | `wall_ref_in_ci_pct`, `footprint_lidar_in_ci` | **Fail** on accuracy (video footprint +38 / −26 / −6.5 %); calibration scored at every tier: LiDAR footprint inside the video interval 3/3, photo 3/3 after the stitch self-check (0/3 before, D27) |
 | 29 | Head-to-head vs consumer app on 2 rooms | `docs/TECHNICAL_REPORT.md` §8 | — | **N/A-data** (needs a consumer-app scan of the same rooms) |
 | 30 | Fix loop: declaration, shipped fix, regenerable before/after, diff | `docs/FIX_LOOP.md`, `bench/fix_loop/` | before/after runs + diff | see FIX_LOOP.md |
 | 31 | Process evidence: commit history | `git log` | incremental commits since hour 0 | Done |

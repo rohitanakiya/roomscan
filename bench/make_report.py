@@ -47,9 +47,10 @@ def _thin_calibration():
         thin = {k: v for k, v in comp.items() if k.startswith(("video_vs", "photo_vs"))}
         if thin:
             inci = sum(bool(v.get("footprint_lidar_in_ci")) for v in thin.values())
-            out += (f" Thin-tier intervals are set from those measurements (D24); the LiDAR footprint falls inside the "
-                    f"thin tier's 95% interval in {inci} of {len(thin)} runs — where it does not, the error is "
-                    "registration/odometry, which the interval does not claim to cover (§5).")
+            out += (f" Thin-tier intervals are set from those measurements (D24), and the photo tier widens its own when "
+                    f"its stitch self-check fails (D27): the LiDAR footprint falls inside the thin tier's 95% interval in "
+                    f"{inci} of {len(thin)} runs" + ("." if inci == len(thin) else
+                    " — where it does not, the error is registration/odometry, which the interval does not claim to cover (§5)."))
     return out
 
 def fmt(x, nd=1, suf=""):
