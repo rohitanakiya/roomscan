@@ -11,6 +11,9 @@ One command per capture. Three input tiers, one output contract:
 Output per capture (`out/<name>/`): `result.json` (schema: `schema/output.schema.json`), `plan.png` / `plan.svg`
 (stitched whole-property plan). Every number carries a 95% interval and its error budget.
 
+**Raw benchmark data** (three Stray Scanner captures, 0.9 GB, not in git): **[roomscan_raw_data on OneDrive](https://1drv.ms/f/c/ce3127bdc58443c9/IgDQs2EzfcLhTo4DRMCZvou1AWGadrdYRKJlT-uDvs5hwUg?e=EAO600)**
+— contents and checksums in [docs/DATA.md](docs/DATA.md).
+
 ## Quick start (clean machine, < 15 min)
 
 Requirements: Python 3.10–3.12 (open3d has no 3.13+ wheels on Windows). ffmpeg is used from PATH if present, otherwise
