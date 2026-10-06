@@ -41,7 +41,7 @@ Status legend: **Done** = implemented and exercised by the benchmark; **Partial*
 | 33 | Reproduction bundle: regenerate every number from raw inputs | `bench/run_benchmark.py`, `scripts/` | `BENCHMARK.md` | Done |
 | 34 | Cached model outputs replay deterministically; live path also runs | `models/depth.py` (hash-keyed float16 cache, pinned threads), seeded RANSAC | `out/.cache/depth` | Done (bit-identical reruns verified, D25) |
 | 35 | Technical report ≤ 6 pages | `docs/TECHNICAL_REPORT.md` | report | Done |
-| 36 | Raw benchmark data: sensor logs, ground truth, app exports | `data/` manifest `docs/DATA.md` | Stray captures (GitHub release `data-v1`) + derived inputs + staged truth | Partial (raw sensor data published; no GT/app exports exist) |
+| 36 | Raw benchmark data: sensor logs, ground truth, app exports | `data/` manifest `docs/DATA.md` | Stray captures (shared folder linked in `docs/DATA.md`) + derived inputs + staged truth | Partial (raw sensor data published; no GT/app exports exist) |
 | 37 | Mirrors, glass, wet-look surfaces, low light covered | report §7, `docs/DEVICE_MATRIX.md` | failure-mode analysis | Done (analysis); detection partial |
 | 38 | Weights / large binaries fetched by script | `scripts/fetch_weights.py`, `.gitignore` | — | Done |
 | 39 | Runs without calling our infrastructure; models disclosed | README "Pretrained model disclosure" | — | Done |

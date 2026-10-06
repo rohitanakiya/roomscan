@@ -4,7 +4,8 @@ All benchmark inputs. Raw captures are the three provided Stray Scanner exports 
 
 ## Download (raw data is not in git: 0.9 GB)
 
-The three provided Stray Scanner exports are attached to the GitHub release **[data-v1](https://github.com/rohitanakiya/roomscan/releases/tag/data-v1)**:
+The three provided Stray Scanner exports are in the shared folder **[roomscan_raw_data](https://1drv.ms/f/c/ce3127bdc58443c9/IgDQs2EzfcLhTo4DRMCZvou1AWGadrdYRKJlT-uDvs5hwUg?e=EAO600)** (OneDrive; GitHub release
+assets were refused at this size):
 `single_room.zip` (c00a170fe1), `single_scan_floor_only.zip` (1a8384c3f6), `single_scan_with_ceiling.zip`
 (c7d28f72c6). Unzip each into `data/raw/single_room`, `data/raw/floor_only`, `data/raw/with_ceiling`; the checksums
 below identify the files every reported number was computed from. Derived inputs (video/photo tiers, staged damage)
