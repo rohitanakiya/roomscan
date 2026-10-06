@@ -2,6 +2,14 @@
 
 All benchmark inputs. Raw captures are the three provided Stray Scanner exports (one flat). Everything else is derived from them by scripts in this repo. Checksums: first 16 hex of SHA-256.
 
+## Download (raw data is not in git: 0.9 GB)
+
+The three provided Stray Scanner exports are attached to the GitHub release **[data-v1](https://github.com/rohitanakiya/roomscan/releases/tag/data-v1)**:
+`single_room.zip` (c00a170fe1), `single_scan_floor_only.zip` (1a8384c3f6), `single_scan_with_ceiling.zip`
+(c7d28f72c6). Unzip each into `data/raw/single_room`, `data/raw/floor_only`, `data/raw/with_ceiling`; the checksums
+below identify the files every reported number was computed from. Derived inputs (video/photo tiers, staged damage)
+are regenerated from them by the scripts named in each section.
+
 ## Raw captures (`data/raw/`)
 
 | name | provided folder | frames (odometry rows) | depth frames | duration s | path m | rgb.mp4 sha | odometry sha |

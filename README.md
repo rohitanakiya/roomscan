@@ -44,8 +44,8 @@ How to capture: **[docs/CAPTURE_PROTOCOL.md](docs/CAPTURE_PROTOCOL.md)** (one pa
 ## Reproduce every reported number
 
 ```bash
-# unzip the three provided Stray exports to data/raw/single_room (c00a170fe1), data/raw/floor_only (1a8384c3f6),
-# data/raw/with_ceiling (c7d28f72c6); checksums of what we used are in docs/DATA.md
+# download the three Stray exports from the GitHub release data-v1 (docs/DATA.md) and unzip them to
+# data/raw/single_room, data/raw/floor_only, data/raw/with_ceiling; checksums are in docs/DATA.md
 python -m roomscan data/raw/<capture> --out out/bench/lidar/<capture>                                  # LiDAR plans
 python scripts/make_tier_inputs.py data/raw/<capture> out/bench/lidar/<capture>/result.json data/tiers   # video/photo inputs
 python bench/stage_damage.py data/raw/single_room data/staged/single_room_staged largest               # staged damage (furnished room)
